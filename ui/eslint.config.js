@@ -13,7 +13,14 @@ function browserStorageRestrictions() {
 }
 
 module.exports = defineConfig([
-  globalIgnores(['dist/', 'coverage/', '.angular/', 'out-tsc/']),
+  globalIgnores([
+    'dist/',
+    'coverage/',
+    '.angular/',
+    'out-tsc/',
+    'test-results/',
+    'playwright-report/',
+  ]),
   {
     files: ['**/*.ts'],
     extends: [

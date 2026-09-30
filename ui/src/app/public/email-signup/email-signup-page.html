@@ -1,0 +1,32 @@
+<h1>Get news alerts by email</h1>
+<p class="signup-intro">
+  We check the news every hour. Subscribe, and you will receive one email for each new event.
+</p>
+
+<app-status-message [message]="status()" [kind]="statusKind()" />
+<app-error-summary [entries]="summary()" />
+
+<form class="signup-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>{{ fields.name.label }}</mat-label>
+    <input matInput [id]="fields.name.id" formControlName="name" autocomplete="name" />
+    <mat-error>{{ message(form.controls.name, fields.name.label) }}</mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>{{ fields.email.label }}</mat-label>
+    <input
+      matInput
+      [id]="fields.email.id"
+      formControlName="email"
+      type="email"
+      autocomplete="email"
+      spellcheck="false"
+      autocapitalize="none"
+    />
+    <mat-hint>For example, name&#64;example.com</mat-hint>
+    <mat-error>{{ message(form.controls.email, fields.email.label) }}</mat-error>
+  </mat-form-field>
+
+  <app-submit-button [busy]="busy()">Subscribe</app-submit-button>
+</form>

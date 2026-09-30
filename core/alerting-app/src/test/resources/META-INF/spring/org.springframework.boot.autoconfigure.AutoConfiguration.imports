@@ -2,3 +2,6 @@ com.sonrisa.alerting.testplugin.TestSourceAutoConfiguration
 com.sonrisa.alerting.testplugin.DuplicateTestSourceAutoConfiguration
 com.sonrisa.alerting.testplugin.TestChannelAutoConfiguration
 com.sonrisa.alerting.testplugin.OrphanSubscriberTypeAutoConfiguration
+com.sonrisa.alerting.testplugin.SubscriptionTestPluginAutoConfiguration
+com.sonrisa.alerting.testplugin.TestEmailChannelAutoConfiguration
+com.sonrisa.alerting.testplugin.TestSlackChannelAutoConfiguration

@@ -24,6 +24,8 @@ spring-boot-gradle-plugin = { module = "org.springframework.boot:spring-boot-gra
 spring-boot-starter-webmvc = { module = "org.springframework.boot:spring-boot-starter-webmvc" }
 spring-boot-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation" }
 spring-boot-configuration-processor = { module = "org.springframework.boot:spring-boot-configuration-processor" }
+# Plugin modules (OP-18): @AutoConfiguration and its conditions without a whole starter.
+spring-boot-autoconfigure = { module = "org.springframework.boot:spring-boot-autoconfigure" }
 spring-boot-starter-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator" }
 spring-boot-starter-mail = { module = "org.springframework.boot:spring-boot-starter-mail" }
 spring-boot-starter-security = { module = "org.springframework.boot:spring-boot-starter-security" }
@@ -33,6 +35,8 @@ spring-boot-starter-jdbc = { module = "org.springframework.boot:spring-boot-star
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
 spring-boot-starter-webmvc-test = { module = "org.springframework.boot:spring-boot-starter-webmvc-test" }
 spring-security-test = { module = "org.springframework.security:spring-security-test" }
+# Spring Boot 4: Spring Security in test slices such as @WebMvcTest (module spring-boot-security-test).
+spring-boot-starter-security-test = { module = "org.springframework.boot:spring-boot-starter-security-test" }
 h2 = { module = "com.h2database:h2" }
 postgresql = { module = "org.postgresql:postgresql" }
 jakarta-persistence-api = { module = "jakarta.persistence:jakarta.persistence-api" }

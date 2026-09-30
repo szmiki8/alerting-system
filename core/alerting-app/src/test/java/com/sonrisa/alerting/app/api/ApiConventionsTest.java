@@ -147,7 +147,8 @@ class ApiConventionsTest {
     @Test
     void applicationCodeCanRaiseATypedProblem() throws Exception {
         mvc.perform(get(BASE + "/webhook-failure"))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.status").value(422))
                 .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.type").value("urn:alerting:problem:webhook-not-verified"))
                 .andExpect(jsonPath("$.title").value("Webhook not verified"));

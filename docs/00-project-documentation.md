@@ -525,3 +525,8 @@ Every subscriber type names the channel that delivers to it: email goes to the e
 a future module that has separate flags for its type and channel. It rarely happens with our own modules, because the email and Slack modules switch their type and channel on with one shared flag.
 
 _(output cut...)_"
+
+### Milestone 3
+
+Claude > Start M3 milestone with multiple agents
+

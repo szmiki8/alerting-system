@@ -1,0 +1,43 @@
+// Shared layout of the public sign-up pages (FE-11, FE-12, NFR-12): one column that uses the
+// full width on small screens (down to 320 px) and stays readable on wide ones.
+:host {
+  display: block;
+  max-width: 36rem;
+}
+
+.signup-intro {
+  margin: 0 0 1.5rem;
+}
+
+.signup-form {
+  display: flex;
+  flex-direction: column;
+  // Hints and errors take the space they need (subscriptSizing="dynamic"), so long texts wrap
+  // on narrow screens instead of overlapping the next field.
+  gap: 1.25rem;
+
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+.signup-help {
+  margin: 0 0 1.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  background: var(--mat-sys-surface-container);
+
+  h2 {
+    margin: 0 0 0.5rem;
+    font: var(--mat-sys-title-medium);
+  }
+
+  ol {
+    margin: 0 0 0.5rem;
+    padding-left: 1.25rem;
+  }
+
+  p {
+    margin: 0;
+  }
+}

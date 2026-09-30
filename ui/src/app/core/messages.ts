@@ -25,4 +25,19 @@ export const MESSAGES = {
     errorSummaryTitle: 'There is a problem',
     submitting: 'Sending, please wait.',
   },
+  /** Messages of the public sign-up pages (FE-11, FE-12). */
+  signup: {
+    /** Same text for new and already registered addresses (FR-05). */
+    emailConfirmation:
+      'Thank you. If this address was not subscribed yet, it will now receive an email for each new event.',
+    /** Same text for new and already registered webhooks (FR-05). */
+    slackConfirmation:
+      'Thank you. If this channel was not subscribed yet, it will now receive a Slack message for each new event.',
+    webhookUrlFormat:
+      'Enter a Slack incoming webhook URL. It starts with https://hooks.slack.com/services/.',
+    verifyingWebhook: 'Sending a welcome message to your Slack channel, please wait.',
+    /** Slack rejected the welcome message or did not answer (FR-04, HTTP 422). */
+    webhookNotVerified:
+      'The webhook could not be verified: Slack did not accept our welcome message. Check that you copied the complete webhook URL and that the webhook is still active in Slack, then try again.',
+  },
 } as const;

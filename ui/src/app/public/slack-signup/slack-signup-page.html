@@ -1,0 +1,53 @@
+<h1>Get news alerts in Slack</h1>
+<p class="signup-intro">
+  We check the news every hour. Subscribe a Slack channel, and it will receive one message for each
+  new event.
+</p>
+
+<section class="signup-help" aria-labelledby="slack-signup-help-title">
+  <h2 id="slack-signup-help-title">How to get a webhook URL</h2>
+  <ol>
+    <li>In Slack, create an app for your workspace and turn on "Incoming Webhooks".</li>
+    <li>Choose "Add New Webhook to Workspace" and pick the channel for the alerts.</li>
+    <li>Copy the webhook URL and paste it below.</li>
+  </ol>
+  <p>
+    Details are in the
+    <a [href]="docsUrl">Slack documentation on incoming webhooks (external site)</a>. We send a
+    welcome message to the channel to check the webhook before we subscribe it.
+  </p>
+</section>
+
+<app-status-message [message]="status()" [kind]="statusKind()" />
+<app-error-summary [entries]="summary()" />
+
+<form class="signup-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>{{ fields.webhookUrl.label }}</mat-label>
+    <input
+      matInput
+      [id]="fields.webhookUrl.id"
+      formControlName="webhookUrl"
+      type="url"
+      inputmode="url"
+      autocomplete="off"
+      spellcheck="false"
+      autocapitalize="none"
+    />
+    <mat-hint>Starts with https://hooks.slack.com/services/</mat-hint>
+    <mat-error>{{
+      message(form.controls.webhookUrl, fields.webhookUrl.label, fields.webhookUrl.messages)
+    }}</mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>{{ fields.label.label }} (optional)</mat-label>
+    <input matInput [id]="fields.label.id" formControlName="label" autocomplete="off" />
+    <mat-hint>Helps to recognise the channel, for example "#newsroom".</mat-hint>
+    <mat-error>{{ message(form.controls.label, fields.label.label) }}</mat-error>
+  </mat-form-field>
+
+  <app-submit-button [busy]="busy()" [busyText]="verifyingText"
+    >Subscribe channel</app-submit-button
+  >
+</form>

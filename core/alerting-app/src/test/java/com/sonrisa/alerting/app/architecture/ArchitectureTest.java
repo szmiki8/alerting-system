@@ -1,16 +1,28 @@
 package com.sonrisa.alerting.app.architecture;
 
 import com.tngtech.archunit.core.importer.ImportOption;
+import com.tngtech.archunit.core.importer.Location;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
 /**
  * Checks the production classes of all core modules. The plugin modules are on the test runtime
- * classpath because they are runtime dependencies of the application.
+ * classpath because they are runtime dependencies of the application. Test code is left out, including the
+ * Gradle test fixtures of the plugin modules (for example the Slack client against WireMock).
  */
-@AnalyzeClasses(packages = ArchitectureRules.BASE, importOptions = ImportOption.DoNotIncludeTests.class)
+@AnalyzeClasses(packages = ArchitectureRules.BASE,
+        importOptions = {ImportOption.DoNotIncludeTests.class, ArchitectureTest.DoNotIncludeTestFixtures.class})
 class ArchitectureTest {
+
+    /** Leaves out Gradle test fixtures: the {@code -test-fixtures} jar or the {@code testFixtures} classes. */
+    static final class DoNotIncludeTestFixtures implements ImportOption {
+
+        @Override
+        public boolean includes(Location location) {
+            return !location.contains("-test-fixtures.jar") && !location.contains("/testFixtures/");
+        }
+    }
 
     @ArchTest
     static final ArchRule pluginsDoNotDependOnApp = ArchitectureRules.PLUGINS_DO_NOT_DEPEND_ON_APP;

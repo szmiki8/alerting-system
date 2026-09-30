@@ -1,0 +1,9 @@
+/* Type-checks the Playwright tests and config (`npm run e2e:typecheck`); Playwright runs them itself. */
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["**/*.ts", "../playwright.config.ts"]
+}

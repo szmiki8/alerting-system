@@ -20,7 +20,8 @@ public enum ProblemType {
             "One or more fields are invalid."),
     BAD_REQUEST("bad-request", HttpStatus.BAD_REQUEST, "Bad request",
             "The request is malformed."),
-    WEBHOOK_NOT_VERIFIED("webhook-not-verified", HttpStatus.BAD_REQUEST, "Webhook not verified",
+    /** 422: the request is well-formed, but the Slack welcome message failed (FR-04, architecture Section 10.2). */
+    WEBHOOK_NOT_VERIFIED("webhook-not-verified", HttpStatus.UNPROCESSABLE_CONTENT, "Webhook not verified",
             "The welcome message could not be delivered to the webhook."),
     UNAUTHENTICATED("unauthenticated", HttpStatus.UNAUTHORIZED, "Authentication required",
             "Sign in to access this resource."),
@@ -72,8 +73,8 @@ public enum ProblemType {
 
     /**
      * The generic type for a status, used for errors raised by the framework (unknown route, wrong
-     * method, unreadable body, ...). Types that share a status with another (validation, webhook not
-     * verified, CSRF) are only used where they are raised explicitly.
+     * method, unreadable body, ...). The validation, webhook-not-verified and CSRF types are only used where
+     * they are raised explicitly.
      */
     static Optional<ProblemType> forStatus(HttpStatusCode status) {
         return Arrays.stream(values())

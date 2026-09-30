@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
 import { Route, TitleStrategy, provideRouter } from '@angular/router';
@@ -15,7 +17,13 @@ describe('routes', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      providers: [provideRouter(routes), { provide: TitleStrategy, useClass: AppTitleStrategy }],
+      providers: [
+        provideRouter(routes),
+        { provide: TitleStrategy, useClass: AppTitleStrategy },
+        // The sign-up pages use the subscription API; no request is sent in these tests.
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
     });
     harness = await RouterTestingHarness.create();
     title = TestBed.inject(Title);

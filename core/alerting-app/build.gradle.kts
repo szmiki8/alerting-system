@@ -32,7 +32,11 @@ dependencies {
     testImplementation(libs.archunit.junit6)
     testImplementation(libs.spring.boot.starter.webmvc.test)
     testImplementation(libs.spring.security.test)
+    testImplementation(libs.spring.boot.starter.security.test)
     testImplementation(libs.wiremock.standalone)
+    // BE-19: the Slack plugin's test fixture builds its webhook client against WireMock, for a test-only
+    // override of the plugin's client bean. Test code only; production code never sees a plugin (ArchUnit).
+    testImplementation(testFixtures(project(":channel-slack")))
     // Persistence tests (BE-06): data JPA slice and Testcontainers PostgreSQL.
     testImplementation(libs.spring.boot.starter.data.jpa.test)
     testImplementation(libs.spring.boot.testcontainers)

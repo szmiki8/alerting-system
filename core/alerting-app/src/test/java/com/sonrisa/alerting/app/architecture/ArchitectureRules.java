@@ -82,12 +82,15 @@ final class ArchitectureRules {
 
     /**
      * Outbound HTTP clients are built only through {@code OutboundHttpClients}, which requires timeouts
-     * (BE-17, NFR-08). These factories create clients without the integration's timeouts.
+     * (BE-17, NFR-08). These factories create clients without the integration's timeouts. The rule covers
+     * the plugin modules too: they cannot use {@code OutboundHttpClients} and instead build their client from
+     * Spring Boot's {@code RestClient.Builder} with their own timeouts (OP-18).
      */
     static final ArchRule HTTP_CLIENTS_ARE_BUILT_WITH_TIMEOUTS = noClasses()
             .that().resideInAPackage(BASE + "..")
             .should().callCodeUnitWhere(clientFactoryWithoutTimeouts())
-            .because("every outbound HTTP client needs explicit timeouts (NFR-08); use OutboundHttpClients")
+            .because("every outbound HTTP client needs explicit timeouts (NFR-08); use OutboundHttpClients,"
+                    + " or in a plugin Spring Boot's RestClient.Builder with the plugin's timeouts (OP-18)")
             .allowEmptyShould(true);
 
     private ArchitectureRules() {

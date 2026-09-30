@@ -267,5 +267,25 @@ describe('Form feedback components', () => {
       control.setErrors({ somethingElse: true });
       expect(fieldErrorMessage(control, 'Name')).toBe('Name is not valid.');
     });
+
+    it('uses field-specific texts for single validators', () => {
+      const control = new FormControl('');
+      const messages = { pattern: 'Enter a Slack webhook URL.' };
+      control.setErrors({ pattern: { requiredPattern: 'x' } });
+      expect(fieldErrorMessage(control, 'URL', messages)).toBe('Enter a Slack webhook URL.');
+      control.setErrors({ required: true, pattern: true });
+      expect(fieldErrorMessage(control, 'URL', messages)).toBe('URL is required.');
+      control.setErrors({ server: 'from the server' });
+      expect(fieldErrorMessage(control, 'URL', { server: 'ignored' })).toBe('from the server');
+    });
+
+    it('uses field-specific texts in the error summary', () => {
+      const form = new FormGroup({ url: new FormControl('x', Validators.pattern(/^y$/)) });
+      expect(
+        errorSummaryEntries(form, [
+          { path: 'url', id: 'url', label: 'URL', messages: { pattern: 'Custom.' } },
+        ]),
+      ).toEqual([{ fieldId: 'url', message: 'Custom.' }]);
+    });
   });
 });

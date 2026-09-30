@@ -14,7 +14,12 @@ export interface FormFieldInfo {
   id: string;
   /** Visible field label, used in messages. */
   label: string;
+  /** Field-specific texts by validator error key, for example a format hint for `pattern`. */
+  messages?: FieldMessages;
 }
+
+/** Field-specific error texts by validator error key (`required`, `pattern`, ...). */
+export type FieldMessages = Readonly<Partial<Record<string, string>>>;
 
 /**
  * Copies the server's field errors (from an `ApiError` of kind `validation`) onto the matching
@@ -44,12 +49,22 @@ export function applyServerFieldErrors(
 
 /**
  * Message for the first error of a control, from the text catalogue; server errors carry their
- * own message. Returns `null` when the control is valid.
+ * own message. `messages` replaces the catalogue text for single validators of this field.
+ * Returns `null` when the control is valid.
  */
-export function fieldErrorMessage(control: AbstractControl, label: string): string | null {
+export function fieldErrorMessage(
+  control: AbstractControl,
+  label: string,
+  messages: FieldMessages = {},
+): string | null {
   const errors = control.errors;
   if (!errors) {
     return null;
+  }
+  const custom = ['required', 'email', 'maxlength', 'pattern'].find((key) => errors[key]);
+  const customMessage = custom ? messages[custom] : undefined;
+  if (customMessage) {
+    return customMessage;
   }
   if (errors['required']) {
     return MESSAGES.form.required(label);
@@ -78,7 +93,7 @@ export function errorSummaryEntries(
 ): ErrorSummaryEntry[] {
   return fields.flatMap((field) => {
     const control = form.get(field.path);
-    const message = control ? fieldErrorMessage(control, field.label) : null;
+    const message = control ? fieldErrorMessage(control, field.label, field.messages) : null;
     return message ? [{ fieldId: field.id, message }] : [];
   });
 }

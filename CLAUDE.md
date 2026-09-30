@@ -9,7 +9,9 @@ Implementation (step 7 of the plan in `docs/00-project-documentation.md`), follo
 task breakdown in `docs/03-implementation-details.md`. Milestone M1 (runnable skeletons,
 BE-01 to BE-05 and FE-01 to FE-05) and M2 (foundations: persistence, extension
 interfaces, API conventions, security baseline, HTTP clients and retries; UI API client and
-form feedback) are done; M3 is next. The requirements, the
+form feedback) and M3 (public sign-up end to end: subscription service, email and Slack
+subscriber types, the two POST endpoints, the sign-up pages and Playwright tests) are done;
+M4 is next. The requirements, the
 architecture (`docs/02-system-architecture.md`, all ADRs accepted) and the open points in
 Section 9 of `docs/03-implementation-details.md` are closed decisions.
 
@@ -69,6 +71,8 @@ There is no CI (OP-07); these commands are the checks.
   - `npm start`: dev server on port 4200, proxying `/api`, `/oauth2`, `/login` and
     `/logout` to the Core (`CORE_URL`, default `http://localhost:8080`).
   - `npm test` runs once; `npm run test:watch` watches.
+  - `npm run e2e:ci`: Playwright tests against a mocked backend (not part of `check`;
+    needs `npx playwright install chromium` once).
 
 ## Architecture overview and key directories
 Details in `docs/02-system-architecture.md`.

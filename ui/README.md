@@ -10,18 +10,25 @@ Generated with [Angular CLI](https://github.com/angular/angular-cli) 21.2.24.
 
 ## NPM scripts
 
-| Script                   | What it does                                                                 |
-| ------------------------ | ---------------------------------------------------------------------------- |
-| `npm start`              | Dev server on `http://localhost:4200/` with the proxy to the Core.           |
-| `npm run build`          | Production build into `dist/alerting-ui/` (fails when a budget is exceeded). |
-| `npm test`               | Unit tests (Vitest) once.                                                    |
-| `npm run test:watch`     | Unit tests in watch mode.                                                    |
-| `npm run test:ci`        | Unit tests once, headless, with a coverage report in `coverage/`.            |
-| `npm run lint`           | angular-eslint over TypeScript and templates, including accessibility rules. |
-| `npm run format`         | Format all files with Prettier.                                              |
-| `npm run format:check`   | Check formatting without changing files.                                     |
-| `npm run check:contrast` | WCAG AA contrast check of the built theme colours (after `npm run build`).   |
-| `npm run check`          | All checks: lint, format check, build, contrast check, tests with coverage.  |
+| Script                   | What it does                                                                                             |
+| ------------------------ | -------------------------------------------------------------------------------------------------------- |
+| `npm start`              | Dev server on `http://localhost:4200/` with the proxy to the Core.                                       |
+| `npm run build`          | Production build into `dist/alerting-ui/` (fails when a budget is exceeded).                             |
+| `npm test`               | Unit tests (Vitest) once.                                                                                |
+| `npm run test:watch`     | Unit tests in watch mode.                                                                                |
+| `npm run test:ci`        | Unit tests once, headless, with a coverage report in `coverage/`.                                        |
+| `npm run lint`           | angular-eslint over TypeScript and templates, including accessibility rules.                             |
+| `npm run format`         | Format all files with Prettier.                                                                          |
+| `npm run format:check`   | Check formatting without changing files.                                                                 |
+| `npm run check:contrast` | WCAG AA contrast check of the built theme colours (after `npm run build`).                               |
+| `npm run check`          | All checks: lint, format check, build, contrast check, e2e type check, tests with coverage.              |
+| `npm run e2e`            | Playwright end-to-end tests against a mocked Core; starts `ng serve` on port 4201 (or reuses one).       |
+| `npm run e2e:ci`         | The same, headless with line output; with `CI` set it always starts a fresh dev server and retries once. |
+| `npm run e2e:typecheck`  | Type-checks the Playwright tests (Playwright itself does not).                                           |
+
+The end-to-end tests need the Chromium browser once: `npx playwright install chromium`. They are
+not part of `npm run check`, because that would require a browser binary and a free port; run
+them separately. Reports go to `playwright-report/` and `test-results/`.
 
 ## Local development with the Core
 

@@ -12,8 +12,11 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test:ci": "ng test --watch=false --coverage",
-    "check": "npm run lint && npm run format:check && npm run build && npm run check:contrast && npm run test:ci",
-    "check:contrast": "node scripts/check-contrast.mjs"
+    "check": "npm run lint && npm run format:check && npm run build && npm run check:contrast && npm run e2e:typecheck && npm run test:ci",
+    "check:contrast": "node scripts/check-contrast.mjs",
+    "e2e": "playwright test",
+    "e2e:ci": "playwright test --reporter=line",
+    "e2e:typecheck": "tsc -p e2e/tsconfig.json"
   },
   "private": true,
   "packageManager": "npm@11.6.2",
@@ -35,6 +38,8 @@
     "@angular/cli": "21.2.24",
     "@angular/compiler-cli": "21.2.25",
     "@eslint/js": "10.0.1",
+    "@playwright/test": "1.63.0",
+    "@types/node": "24.19.0",
     "@vitest/coverage-v8": "4.1.11",
     "angular-eslint": "21.4.0",
     "eslint": "10.11.0",
