@@ -132,6 +132,35 @@ class SubscriptionServiceIntegrationTest {
         }
 
         @Test
+        void inactiveSubscriberIsReactivatedAfterAPassedVerification() {
+            String address = randomAddress();
+            service.subscribe("test-secret", new SubscriberInput("team", address));
+            jdbcTemplate.update("update subscriber set status = 'INACTIVE' where address_fingerprint = ?",
+                    fingerprinter.fingerprint(address));
+
+            SubscriptionResult result = service.subscribe("test-secret", new SubscriberInput("team", address));
+
+            assertThat(result).isEqualTo(SubscriptionResult.accepted());
+            assertThat(rowsWithAddress(address)).isEqualTo(1);
+            assertThat(load(address).getStatus()).isEqualTo(SubscriberStatus.ACTIVE);
+            assertThat(secret.verifyCalls()).hasSize(2);
+        }
+
+        @Test
+        void inactiveSubscriberStaysInactiveWhenTheVerificationFails() {
+            String address = randomAddress();
+            service.subscribe("test-secret", new SubscriberInput("team", address));
+            jdbcTemplate.update("update subscriber set status = 'INACTIVE' where address_fingerprint = ?",
+                    fingerprinter.fingerprint(address));
+            secret.verifyWith(normalised -> VerificationResult.failed("HTTP 404 no_service"));
+
+            SubscriptionResult result = service.subscribe("test-secret", new SubscriberInput("team", address));
+
+            assertThat(result).isEqualTo(SubscriptionResult.notVerified());
+            assertThat(load(address).getStatus()).isEqualTo(SubscriberStatus.INACTIVE);
+        }
+
+        @Test
         void verificationRunsOutsideAnyTransaction() {
             service.subscribe("test-secret", new SubscriberInput("team", randomAddress()));
 

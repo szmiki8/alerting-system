@@ -528,5 +528,58 @@ _(output cut...)_"
 
 ### Milestone 3
 
-Claude > Start M3 milestone with multiple agents
+**Claude > Start M3 milestone with multiple agents**
 
+"M3 is complete: BE-14, BE-15, BE-16, BE-18, BE-19, FE-09, FE-11, FE-12 and FE-21. Email and Slack sign-up now work end to end. I re-ran everything myself:
+- ./gradlew build: 519 tests, none skipped or failed. Of those, 323 re-ran; Gradle reused the stored results for the modules that didn't change.
+- npm run check: 108 tests.
+- npm run e2e:ci: 10 Playwright tests.
+
+Nothing is committed. All worktrees are removed, and CLAUDE.md now shows M3 as done and includes the e2e command.
+
+What M3 delivers:
+- Subscription service: validates and normalises the address, then checks for duplicates by fingerprint. Sign-ups run concurrently are safe: exactly one row is stored. Slack verification runs outside any database transaction.
+- Email type: strict email rules, lower-casing, and international domains stored in Punycode (xn--…).
+- Slack type and client:
+    - It only ever calls hooks.slack.com and never follows redirects.
+    - Slack's error answers are classified as transient or permanent, checked against Slack's current documentation.
+    - It sends a welcome message and masks the URL wherever it appears.
+- Endpoints:
+    - POST /api/v1/subscriptions/email and /slack return 202, 400, 403 or 422, as agreed with the UI.
+    - A disabled plugin answers 404.
+    - Everything is documented in OpenAPI.
+- UI: the email and Slack sign-up pages, with accessible errors and focus handling, a mobile layout, and a help section for Slack.
+
+Fixes I made while merging:
+- Slack vs. OP-21: the Slack plugin silently left out its type when the channel was missing, which went against your decision OP-21. It now stops start-up, the same as email.
+- 422 status: the webhook-not-verified problem was defined as HTTP 400. It's now 422, as the architecture requires.
+- UI rules: the label limit changed from 80 to 100, and the webhook pattern now matches the backend.
+
+Decisions for you:
+1. Disabled plugin answer: 404 (recommended, since it's a deliberate setting, not an outage) or 503?
+2. Re-subscribing an inactive subscriber: a Slack subscriber marked inactive after errors (FR-21) who signs up again currently gets "accepted" but stays inactive. Should it be reactivated, re-verifying the webhook first?
+3. Slack 400 errors: Slack answers 400 for invalid_payload and similar errors, and these count as permanent. In BE-34 a permanent failure marks the subscriber inactive, even if the payload bug is ours. Should they stay permanent, or become "failed, don't inactivate", which needs an extension-interface
+   change? This needs a decision before M5.
+4. Fingerprint across types: uniqueness is by address only, across all types. A future type whose addresses overlap another's, such as the log type from OP-09, would get "accepted" with nothing stored. Keep it, or include the type in the fingerprint?
+5. Smaller points to confirm:
+    - Email local parts are lower-cased.
+    - Punycode appears in the admin list.
+    - The field limits count the raw input before trimming.
+    - The webhook pattern appears in OpenAPI as a description only, not as a formal pattern.
+    - Two simultaneous sign-ups of the same new webhook can each send a welcome message.
+    - The 202 confirmation reads "Thank you. Your subscription has been received."
+    - axe accessibility checks come with FE-22, not now."
+
+Claude > Decisions: 1: use 404, it depends on configuration, 2: yes, re-verify, 3: stay permanent, 4: keep it for now, make a note, 5: ok
+
+"I've recorded your decisions and implemented decision 2. The full core build passes with 525 tests, none skipped or failed. Nothing is committed.
+
+Code change, reactivating inactive subscribers (decision 2):
+- New behaviour: in SubscriptionService, an INACTIVE subscriber who signs up again is verified again; for Slack, that means a new welcome message.
+    - If verification passes, the subscriber becomes ACTIVE again, the status-change time is set, and the answer is the usual 202.
+    - If it fails, nothing changes and the answer is 422 webhook-not-verified.
+    - An ACTIVE subscriber is never verified again, as before.
+- Tests: two new unit tests, plus two integration tests that each run on H2 and on PostgreSQL. They cover a passed and a failed re-verification.
+
+New rows in Section 9.1 of docs/03-implementation-details.md:
+_(output cut...)_"

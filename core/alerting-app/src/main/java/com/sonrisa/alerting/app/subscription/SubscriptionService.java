@@ -3,6 +3,7 @@ package com.sonrisa.alerting.app.subscription;
 import com.sonrisa.alerting.app.persistence.crypto.AddressFingerprinter;
 import com.sonrisa.alerting.app.persistence.subscriber.Subscriber;
 import com.sonrisa.alerting.app.persistence.subscriber.SubscriberRepository;
+import com.sonrisa.alerting.app.persistence.subscriber.SubscriberStatus;
 import com.sonrisa.alerting.app.plugin.SubscriberTypeRegistry;
 import com.sonrisa.alerting.spi.subscriber.FieldError;
 import com.sonrisa.alerting.spi.subscriber.NormalisedAddress;
@@ -27,6 +28,11 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * fingerprint of the normalised address; if a subscriber with that fingerprint exists, answer "accepted" without
  * any change; otherwise let the type verify the address (for example the Slack welcome message) and store an
  * ACTIVE subscriber with its masked form, encrypted when the type declares the address secret.
+ *
+ * <p><b>Re-subscribing an inactive subscriber</b> (decision OP-28). A subscriber that was marked INACTIVE after a
+ * permanent delivery error (FR-21) and signs up again is verified again; when the verification passes, it becomes
+ * ACTIVE again. When it fails, nothing changes and the result is "not verified". An ACTIVE subscriber is never
+ * verified again.
  *
  * <p><b>Transactions.</b> This service is deliberately not transactional and refuses to run inside a caller's
  * transaction: the verification contacts an external service and must not hold a database connection or locks
@@ -110,8 +116,9 @@ public class SubscriptionService {
 
         Optional<Subscriber> existing = subscribers.findByAddressFingerprint(fingerprint);
         if (existing.isPresent()) {
-            log.info("Already subscribed: type={}, id={}, address={}", type.key(), existing.get().getId(), masked);
-            return SubscriptionResult.accepted();
+            return existing.get().getStatus() == SubscriberStatus.INACTIVE
+                    ? reactivate(type, existing.get(), address, displayName, masked)
+                    : alreadySubscribed(type, existing.get(), masked);
         }
 
         if (!verify(type, address, displayName, masked)) {
@@ -131,6 +138,26 @@ public class SubscriptionService {
             return SubscriptionResult.accepted();
         }
         log.info("Subscribed: type={}, id={}, address={}", type.key(), subscriber.getId(), masked);
+        return SubscriptionResult.accepted();
+    }
+
+    private static SubscriptionResult alreadySubscribed(SubscriberType type, Subscriber subscriber, String masked) {
+        log.info("Already subscribed: type={}, id={}, address={}", type.key(), subscriber.getId(), masked);
+        return SubscriptionResult.accepted();
+    }
+
+    /**
+     * Verifies an INACTIVE subscriber's address again and, when it passes, makes the subscriber ACTIVE (OP-28).
+     * The answer to the caller is the same "accepted" as for a new address (FR-05).
+     */
+    private SubscriptionResult reactivate(SubscriberType type, Subscriber subscriber, NormalisedAddress address,
+            String displayName, String masked) {
+        if (!verify(type, address, displayName, masked)) {
+            return SubscriptionResult.notVerified();
+        }
+        subscriber.changeStatus(SubscriberStatus.ACTIVE, clock.instant());
+        subscribers.saveAndFlush(subscriber);
+        log.info("Reactivated: type={}, id={}, address={}", type.key(), subscriber.getId(), masked);
         return SubscriptionResult.accepted();
     }
 

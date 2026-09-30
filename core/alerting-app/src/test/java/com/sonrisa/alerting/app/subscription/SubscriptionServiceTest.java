@@ -117,6 +117,38 @@ class SubscriptionServiceTest {
     }
 
     @Test
+    void inactiveSubscriberIsVerifiedAgainAndReactivated() {
+        Subscriber inactive = existing("test-secret");
+        inactive.changeStatus(SubscriberStatus.INACTIVE, NOW.minusSeconds(60));
+        when(repository.findByAddressFingerprint(fingerprinter.fingerprint(NORMALISED)))
+                .thenReturn(Optional.of(inactive));
+
+        SubscriptionResult result = service.subscribe("test-secret", new SubscriberInput("team", ADDRESS));
+
+        assertThat(result).isEqualTo(SubscriptionResult.accepted());
+        assertThat(secret.verifyCalls()).hasSize(1);
+        Subscriber saved = stored();
+        assertThat(saved.getId()).isEqualTo(inactive.getId());
+        assertThat(saved.getStatus()).isEqualTo(SubscriberStatus.ACTIVE);
+        assertThat(saved.getStatusChangedAt()).isEqualTo(NOW);
+    }
+
+    @Test
+    void inactiveSubscriberStaysInactiveWhenVerificationFails() {
+        Subscriber inactive = existing("test-secret");
+        inactive.changeStatus(SubscriberStatus.INACTIVE, NOW.minusSeconds(60));
+        when(repository.findByAddressFingerprint(fingerprinter.fingerprint(NORMALISED)))
+                .thenReturn(Optional.of(inactive));
+        secret.verifyWith(address -> VerificationResult.failed("HTTP 404 no_service"));
+
+        SubscriptionResult result = service.subscribe("test-secret", new SubscriberInput("team", ADDRESS));
+
+        assertThat(result).isEqualTo(SubscriptionResult.notVerified());
+        assertThat(inactive.getStatus()).isEqualTo(SubscriberStatus.INACTIVE);
+        verify(repository, never()).saveAndFlush(any());
+    }
+
+    @Test
     void newAndExistingAddressesGiveTheSameResult() {
         SubscriptionResult first = service.subscribe("test-plain", new SubscriberInput("Ada", ADDRESS));
         when(repository.findByAddressFingerprint(any())).thenReturn(Optional.of(existing("test-plain")));
