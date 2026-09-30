@@ -21,7 +21,7 @@ _(These are subject to change during the process.)_
 2. Understand vague brief
 3. Fleshing out vague details to form a complete project picture
 4. Define deliverables, set up scope
-5. Design system architecture and constraints
+5. Design system architecture and set constraints
 6. Implement system
 7. Evaluate and test product
 
@@ -254,3 +254,88 @@ The document lists these and two more under AQ-01 to AQ-07, each with a proposed
 
 The agent's version of the document ended with a note that CLAUDE.md still had no tech stack. I had already fixed CLAUDE.md, so I removed that note. Also, the agent couldn't load the new skill through the skill system, because the skill was created during this session. It read the skill file and followed
 it directly instead."
+
+**Claude > I've reviewed and slightly modified 02-system-architecture.md Section 16.2. Finalize this.**
+
+"The architecture document docs/02-system-architecture.md is now final (version 1.0), with a change-history entry listing what changed. It isn't committed.
+
+Status: all 16 ADRs are now Accepted. I kept Section 16.2 as you wrote it, but renamed it "Resolved questions" and renamed its answer column "Decision". I also removed the leftover "proposed" and "recommended" wording from the rest of the document.
+
+Your answers, applied to the rest of the document:
+- AQ-01, Angular 21: the tech stack table and compatibility summary now record staying on 21 as a decision.
+- AQ-02, time zone: the scheduling section now uses Europe/Budapest.
+- AQ-03, event cap:
+  - Each source now has a "maximum events per run" setting, default 10, in its extension interface and in its configuration.
+  - The email-volume risk mitigation and the NFR-10 row in the traceability table mention the cap.
+- AQ-04, database:
+  - ADR-04 now includes a Docker Compose variant with PostgreSQL.
+  - The local deployment section describes that variant: a separate PostgreSQL container with two Core instances, which shows the single-run lock working.
+- AQ-05, missed events: already recorded in the NFR-09 row of the traceability table as a limitation.
+- AQ-06, email: ADR-08 now says option (b) was not chosen.
+- AQ-07, hosting: the deployment section says the demo runs locally with Docker Compose and the AWS target is documented only.
+
+I edited only text outside the diagrams, so the 10 diagrams are unchanged and still render.
+
+The "Current phase" section of CLAUDE.md still says to wait for architecture approval before writing code. Should I update it to say the architecture is approved and implementation is next?"
+
+**Claude > Architecture is ready. Define two new Senior Software Engineer skills (one for Angular UI, one for Spring Boot Backend development). Fan out two agents with each skill to create implementation details tasks based on the requirements and system architecture. Gather those tasks and orginaze them in docs/03-implementation-details.md. Tasks should be just like JIRA tasks but now recorded only to plain text/md file. I'll approve skills files before agent fan out.** 
+
+"I've written the two skills. Please review them before I start the agents.
+
+Files:
+- .claude/skills/backend-engineer/SKILL.md (Spring Boot backend)
+- .claude/skills/frontend-engineer/SKILL.md (Angular UI)
+
+What both skills share:
+- Sources: the architecture document is binding, and the requirements define the scope. The skills also use Section 5 of the project documentation and CLAUDE.md. If the documents leave a gap that blocks a task, the agent records an open point for you instead of inventing a design.
+- Two modes:
+  - Planning, which is what we're doing now: JIRA-style tasks, no code.
+  - Implementation, for later: one task at a time, with tests, no commits unless you ask.
+- Task format: the same template in both skills, so I can merge the results easily:
+  - ID (BE-nn / FE-nn), Type (Story, Task or Spike), Epic, Priority, Story points (1, 2, 3 or 5), Labels, Depends on, Traceability (FR/NFR/ADR/section).
+  - A Description, a checklist of acceptance criteria, and technical notes.
+- Sizing: tasks take 1–3 days and are numbered in the order they should be done. The first tasks produce a runnable skeleton, and the build must stay green after each one.
+- Coverage: each agent ends with a table mapping requirements to tasks, lists any Must or Should requirement no task covers, and lists open points.
+
+Backend skill:
+- Covers everything under core/: Gradle modules, persistence, REST API, security, scheduling, sources, delivery, channels, resilience, operations, tests, and the Docker Compose files including the PostgreSQL variant.
+- Standards include:
+  - Java 17 only.
+  - Plugins may depend only on the extension-interface module, checked by an ArchUnit test.
+  - Validated configuration classes.
+  - Flyway-only schema.
+  - A standard error format for the API.
+- Every API the UI needs gets its own task labelled api-contract.
+
+Frontend skill:
+- Covers the public sign-up pages, the admin area (login, list, search, delete, sign-out), routing, guards, the API client, CSRF handling, accessibility and UI tests.
+- Standards follow ADR-12: standalone components, signals, zoneless change detection, typed Reactive Forms, Angular Material, a lazy-loaded admin area, strict TypeScript, WCAG 2.1 AA and responsive layout.
+- The UI agent can't know the backend task IDs, so it names the backend APIs it depends on in words.
+
+Merge plan, once you approve:
+1. Two agents run in parallel. Each writes its tasks to a temporary file in my scratchpad folder, not to the project.
+2. I combine both into docs/03-implementation-details.md, with:
+  - an overview
+  - a suggested order that interleaves backend and UI tasks
+  - the backend and UI tasks grouped by epic
+  - one requirements coverage table
+  - open points
+3. While merging, I'll replace the UI's in-words API dependencies with the matching BE-xx IDs.
+
+Let me know when they're approved, or what to change."
+
+**Claue > Approved, fan out the agents**
+
+"2 background agents launched (↓ to manage)
+
+Plan backend implementation tasks 
+
+Plan Angular UI implementation tasks 
+
+2 skills available
+
+Both agents are now running in parallel:
+- Backend agent: uses the backend-engineer skill and writes its BE-nn tasks, plus a list of the APIs it delivers for the UI, to a temporary file in my scratchpad folder.
+- UI agent: uses the frontend-engineer skill and writes its FE-nn tasks to a separate temporary file there. It names each backend API it depends on in words.
+
+Neither agent will edit any project file. When both have finished, I'll combine the results into docs/03-implementation-details.md and replace the UI's in-words API dependencies with the matching BE-xx IDs."

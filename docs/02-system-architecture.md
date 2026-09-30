@@ -5,15 +5,22 @@
 | Item | Value |
 |---|---|
 | Title | Alerting System - System Architecture |
-| Version | 0.1 |
+| Version | 1.0 |
 | Date | 2026-09-30 |
-| Status | Draft |
+| Status | Final (reviewed by the user) |
 | Author | Senior System Architect (Claude Code, `system-architect` skill) |
 | Input documents | `docs/01-requirements-specification.md` v0.3 (binding scope); `docs/00-project-documentation.md` Section 5 "Define system architecture and constraints" (binding tech stack and constraints); `CLAUDE.md` (working agreements) |
 
+Change history:
+
+| Version | Change |
+|---|---|
+| 0.1 | First draft from the requirements specification v0.3 and the architecture constraints. |
+| 1.0 | Final. The user reviewed the document and answered the open questions (Section 16.2). All ADRs are accepted. Applied the answers: Angular 21 (AQ-01), zone `Europe/Budapest` (AQ-02), at most 10 events per run and Mailpit for the demo (AQ-03), PostgreSQL Compose variant (AQ-04), accepted NFR-09 limitation (AQ-05), SES API plus SMTP adapters (AQ-06), local Docker Compose hosting (AQ-07). |
+
 How to read this document:
 
-- Everything marked **Proposed** (all ADRs in Section 14) is a recommendation. The user makes the final decision.
+- All ADRs in Section 14 are **Accepted**. The open questions in Section 16.2 are resolved; their answers are applied throughout the document.
 - Requirement IDs (`FR-xx`, `NFR-xx`, `CON-xx`, `ASM-xx`, `Q-xx`, `RSK-xx`) refer to the requirements specification v0.3. Removed IDs (FR-06, FR-07, FR-22, NFR-06, RSK-01, RSK-02, RSK-03, RSK-10) are intentionally not used.
 - Architecture risks are `ARSK-xx`, architecture open questions are `AQ-xx` (Section 16).
 - The document stays at architecture level: no source code, DDL, full payloads or complete configuration files.
@@ -61,7 +68,7 @@ Version checks were done on 2026-09-30.
 | Layer | Technology | Version | Notes and source of the version check |
 |---|---|---|---|
 | Language (core) | Java (OpenJDK distribution, e.g. Eclipse Temurin) | 17 (binding) | Spring Boot 4.x "requires at least Java 17 and is compatible with versions up to and including Java 26" (Spring Boot 4.1.0 system requirements, via context7 `/spring-projects/spring-boot/v4.1.0`). Compatible. Java 17 means no virtual threads (Java 21+); delivery uses bounded thread pools instead. |
-| Application framework | Spring Boot | 4.1.x recommended (4.1.1 is the latest), see ADR-15 | Spring Boot 4.0 (released 2025-11) OSS support ends 2026-12-31; 4.1 (released 2026-06) OSS support until 2027-07-31 (endoflife.date/spring-boot). Boot 4 brings Spring Framework 7, Spring Security 7, Jakarta EE 11 level APIs, Hibernate 7, Jackson 3, Tomcat 11; Undertow removed (Spring Boot 4.0 release notes, GitHub wiki). Boot 4 uses modular starters, for example `spring-boot-starter-webmvc` replaces the deprecated `spring-boot-starter-web`, and Flyway and the H2 console are separate modules (context7). |
+| Application framework | Spring Boot | 4.1.x (4.1.1 is the latest), ADR-15 | Spring Boot 4.0 (released 2025-11) OSS support ends 2026-12-31; 4.1 (released 2026-06) OSS support until 2027-07-31 (endoflife.date/spring-boot). Boot 4 brings Spring Framework 7, Spring Security 7, Jakarta EE 11 level APIs, Hibernate 7, Jackson 3, Tomcat 11; Undertow removed (Spring Boot 4.0 release notes, GitHub wiki). Boot 4 uses modular starters, for example `spring-boot-starter-webmvc` replaces the deprecated `spring-boot-starter-web`, and Flyway and the H2 console are separate modules (context7). |
 | Build (core) | Gradle | 9.x (8.14+ also supported) | The Spring Boot 4 Gradle plugin requires Gradle 8.14 or later, or 9.x (context7, `SpringBootPlugin` and system requirements page). |
 | Persistence | Spring Data JPA (Hibernate 7), Flyway | Managed by Spring Boot | See ADR-04. |
 | In-memory database (demo) | H2 | Managed by Spring Boot | See ADR-04. |
@@ -73,14 +80,14 @@ Version checks were done on 2026-09-30.
 | Email (local) | Spring Mail (SMTP) against Mailpit | Managed by Spring Boot | Local mail sink for development. |
 | API documentation | springdoc-openapi | 3.x (3.1.1 latest stable at time of check) | "springdoc-openapi 3.x is compatible with spring-boot 4" (springdoc.org FAQ). Java 17 baseline of springdoc 3.x not confirmed on the FAQ page; verify before adoption. See ADR-13. |
 | Observability | Spring Boot Actuator, Micrometer (1.16 line with Boot 4), structured logging | Managed by Spring Boot | Boot 4 adds an OpenTelemetry starter (release notes). |
-| UI framework | Angular | 21 (binding) | **Flag:** Angular 21 (released 2025-11-19) has been in **LTS since 2026-06-03** (critical fixes and security patches only) until 2027-06; Angular 22 is the active version (angular.dev/reference/releases). Compatible with the stack; see AQ-01. |
-| UI toolchain | Node.js, NPM, TypeScript | Node 22 or 24 LTS; TypeScript >=5.9 <6.0 | Angular 21 supports Node `^20.19.0 \|\| ^22.12.0 \|\| ^24.0.0`, TypeScript `>=5.9.0 <6.0.0`, RxJS `^6.5.3 \|\| ^7.4.0` (angular.dev/reference/versions). Node 20 is past end of life, so Node 22 or 24 is recommended. |
+| UI framework | Angular | 21 (binding) | **Flag:** Angular 21 (released 2025-11-19) has been in **LTS since 2026-06-03** (critical fixes and security patches only) until 2027-06; Angular 22 is the active version (angular.dev/reference/releases). Compatible with the stack. Decision: stay on 21 for the demo (AQ-01). |
+| UI toolchain | Node.js, NPM, TypeScript | Node 22 or 24 LTS; TypeScript >=5.9 <6.0 | Angular 21 supports Node `^20.19.0 \|\| ^22.12.0 \|\| ^24.0.0`, TypeScript `>=5.9.0 <6.0.0`, RxJS `^6.5.3 \|\| ^7.4.0` (angular.dev/reference/versions). Node 20 is past end of life, so Node 22 or 24 is used. |
 | UI components | Angular Material and CDK | 21.x (same major as Angular) | See ADR-12. |
 | UI tests | Vitest (Angular CLI default), Playwright for end-to-end | Managed by Angular CLI | New Angular CLI projects use Vitest as the default unit test runner (angular.dev/guide/testing, via context7). |
 | Source control | Git | - | Binding. |
 | Containers | Docker / OCI images, Docker Compose locally | - | See ADR-14. |
 
-Compatibility summary: **no incompatible combination found.** Java 17 is the minimum for Spring Boot 4, Gradle 9 is supported, and all recommended libraries have Spring Boot 4 compatible lines. Two points are flagged, not changed: Angular 21 is already in LTS (AQ-01), and Spring Boot 4.0 leaves OSS support at the end of 2026 (ADR-15).
+Compatibility summary: **no incompatible combination found.** Java 17 is the minimum for Spring Boot 4, Gradle 9 is supported, and all recommended libraries have Spring Boot 4 compatible lines. Two points were flagged and decided: Angular 21 stays despite being in LTS (AQ-01), and Spring Boot 4.1.x is used because 4.0 leaves OSS support at the end of 2026 (ADR-15).
 
 ## 4. System context
 
@@ -215,7 +222,7 @@ All three SPIs are plain Java interfaces in `alerting-spi`. Implementations are 
 | Aspect | Design |
 |---|---|
 | Purpose | Fetch items from one external service and return them as event drafts in the standard format (CON-05). |
-| Responsibilities | Unique source key; fetch with its own filters (for NewsAPI.org: country, category, language, page size; Q-03); map items to date and time, title, content, source name, optional link (FR-09); drop items without a title; classify errors as transient or permanent. |
+| Responsibilities | Unique source key; fetch with its own filters (for NewsAPI.org: country, category, language, page size; Q-03) and a maximum number of events per run (default 10, AQ-03); map items to date and time, title, content, source name, optional link (FR-09); drop items without a title; classify errors as transient or permanent. |
 | Not responsible for | Duplicate detection, storage, retries across calls, scheduling. The collection service does these. |
 | Main operations (in words) | "key", "fetch new items" (receives the time of the last successful fetch as a hint, so sources that support it can fill gaps, NFR-09). |
 | Event key | Computed by the collection service from source key plus the item's stable identity (for NewsAPI.org, the normalised article URL, or title plus published time when no URL exists). Unique in the database (FR-10). A source may supply its own identity. |
@@ -543,6 +550,8 @@ flowchart LR
 
 - Docker Compose starts `ui`, `core` and `mailpit`. The stub source can replace NewsAPI.org when no API key is available.
 - One Core instance only (in-memory database). Restarting loses all data; this is accepted for the demo.
+- A second Compose variant (profile `postgres`) adds a PostgreSQL container and two Core instances behind Nginx. It shows the physically separate database and multi-instance behaviour, including the single-run lock (AQ-04).
+- The demo is hosted locally with Docker Compose only; the cloud target in 12.2 is documented but not provisioned (AQ-07).
 - The Google OAuth client must allow the local redirect URI.
 
 ### 12.2 Cloud-ready target deployment (reference: AWS, ADR-14)
@@ -585,7 +594,7 @@ flowchart LR
 
 ### 13.2 Scheduling and time zone
 
-- Collection schedule is a cron expression (default: top of every hour) plus a zone, both in configuration (FR-31, NFR-18). The zone is a regional Central European zone ID so that the CEST switch applies (ASM-03); see AQ-02.
+- Collection schedule is a cron expression (default: top of every hour) plus a zone, both in configuration (FR-31, NFR-18). The zone is `Europe/Budapest`, a regional Central European zone ID, so that the CEST switch applies (ASM-03, AQ-02).
 - Delivery has no schedule; it always follows collection (FR-32).
 - The retention job has its own nightly cron in the same zone.
 - All stored times are UTC instants; rendering in messages and UI uses the configured zone (FR-17, CON-10).
@@ -611,7 +620,7 @@ flowchart LR
 | Group | Content |
 |---|---|
 | Schedule | Collection cron, zone, retention cron, lock timing. |
-| Sources | Per source: enabled flag, filters (country, category, language, page size), timeouts, retry policy; credentials by reference to the secret store. |
+| Sources | Per source: enabled flag, filters (country, category, language, page size), maximum events per run (default 10, AQ-03), timeouts, retry policy; credentials by reference to the secret store. |
 | Channels | Per channel: enabled flag, sender identity (email), gateway type (SES or SMTP), rate limits, retry policy, maximum attempts. |
 | Delivery | Worker pool size, delivery deadline before next run. |
 | Retention | Periods for events, runs/notifications, audit entries. |
@@ -632,118 +641,118 @@ flowchart LR
 
 ## 14. Architecture Decision Records
 
-All ADRs have status **Proposed**. The user decides.
+All ADRs have status **Accepted** (version 1.0).
 
 ### ADR-01: Core as a modular monolith
 
 - **Context**: The Core must be separable into components with extension points, scalable and fault tolerant, but the demo scale is small (ASM-10).
 - **Options**: (a) One Spring Boot deployable with internal modules (Gradle subprojects, package by feature). (b) Microservices: separate subscription API, collector and dispatcher services with a message broker. (c) One deployable without module boundaries.
-- **Decision (recommended)**: (a). Modules for SPI, application and each plugin; module rules checked by tests.
+- **Decision (accepted)**: (a). Modules for SPI, application and each plugin; module rules checked by tests.
 - **Consequences**: Simple to build, run and demo; horizontal scaling of the whole Core; the scheduler lock keeps jobs single-run. Splitting out a dispatcher later is possible because delivery works on persisted notification rows (ADR-06). Option (b) adds a broker and several deployables without a need at this scale.
 
 ### ADR-02: UI delivered as a separate static application on the same origin
 
 - **Context**: Separate UI implementation is binding. Admin login uses cookies, and CSRF handling is simplest on one origin.
 - **Options**: (a) Separate static build served by Nginx locally and by object storage plus CDN in the cloud, with the API routed on the same origin. (b) Angular build packaged into the Spring Boot jar. (c) Separate origins with CORS.
-- **Decision (recommended)**: (a).
+- **Decision (accepted)**: (a).
 - **Consequences**: UI and Core are built, versioned and scaled independently; no CORS; cookies can be SameSite=Lax. Needs an edge/reverse proxy in every environment (Nginx locally, CDN in the cloud).
 
 ### ADR-03: Admin authentication as server-side OIDC login with shared sessions
 
 - **Context**: Google login plus allow-list (FR-23, FR-24), session timeout (NFR-02), multiple Core instances.
 - **Options**: (a) Spring Security OAuth2 Client login on the Core (backend-for-frontend), HttpOnly session cookie, sessions stored with Spring Session JDBC. (b) SPA performs OIDC in the browser and sends Google ID tokens as bearer tokens to a resource server. (c) (a) with sticky sessions instead of a shared session store.
-- **Decision (recommended)**: (a).
+- **Decision (accepted)**: (a).
 - **Consequences**: No tokens in the browser; allow-list and timeout enforced in one place; any instance can serve a request. Sessions live in the same database, so they are lost on restart in the in-memory profile (acceptable). Option (b) puts tokens in the browser and needs its own expiry and revocation handling.
 
 ### ADR-04: Persistence with JPA and Flyway; H2 in-memory for the demo, PostgreSQL as the persistent target
 
 - **Context**: In-memory database for the demo, persistent database later without code change; Database separate from Core.
 - **Options**: (a) Spring Data JPA (Hibernate 7) + Flyway; H2 in-memory embedded in the Core; PostgreSQL profile. (b) Spring Data JDBC instead of JPA. (c) H2 in-memory in server mode as a separate container, shared by several Core instances. (d) PostgreSQL from day one (Testcontainers/Compose), no in-memory database.
-- **Decision (recommended)**: (a), with PostgreSQL integration tests. Option (c) is a fallback if the user wants the database to be a physically separate container in the demo.
+- **Decision (accepted)**: (a), with PostgreSQL integration tests and a Docker Compose variant with PostgreSQL to show the separate database and multi-instance behaviour (AQ-04).
 - **Consequences**: Standard, well-known stack; migrations are the single schema source for both databases. The demo runs as a single instance and loses data on restart (ARSK-01). H2 compatibility mode is not identical to PostgreSQL, so both are tested.
 
 ### ADR-05: Scheduling with Spring scheduling plus ShedLock
 
 - **Context**: Hourly runs, configurable interval, no overlap, one instance per run (FR-11, FR-31, NFR-20).
 - **Options**: (a) Spring `@Scheduled` cron with zone, plus ShedLock with the JDBC lock provider, plus the RUN record as a second guard. (b) Quartz with a clustered JDBC job store. (c) External scheduler (Kubernetes CronJob or AWS EventBridge) calling the manual trigger endpoint.
-- **Decision (recommended)**: (a).
+- **Decision (accepted)**: (a).
 - **Consequences**: Light-weight, works the same on H2 and PostgreSQL, no extra infrastructure. Lock timing must match the interval (lock held at most slightly less than the interval). Quartz is heavier and adds many tables; an external scheduler ties the design to one platform.
 
 ### ADR-06: Delivery through persisted notification records (database outbox)
 
 - **Context**: One message per event and subscriber, exactly-once intent, resumable after restart, rate-limited, scale-out later (FR-14, FR-20, FR-35, NFR-10).
 - **Options**: (a) Create a NOTIFICATION row per (event, subscriber) with a unique constraint, then process rows in a bounded in-process worker pool per channel. (b) Send directly in loops without persisting per-notification state. (c) Publish to a message broker (SQS, RabbitMQ) and consume with workers.
-- **Decision (recommended)**: (a).
+- **Decision (accepted)**: (a).
 - **Consequences**: Duplicates prevented by the database; restart resumes; resend of failures is a status change (FR-34); per-notification history available for diagnosis. The notification table is the largest table (5,000 subscribers × tens of events per hour), so batch inserts and retention matter. Option (c) is the natural next step for scale-out and can replace the worker without changing the SPIs.
 
 ### ADR-07: Resilience library
 
 - **Context**: Retries with backoff, rate limiting per channel and per webhook, optional circuit breakers (NFR-08, FR-35).
 - **Options**: (a) Resilience4j 2.4 with the `resilience4j-spring-boot4` module for retry, rate limiter and circuit breaker, configured per source and channel. (b) Spring Framework 7 built-in resilience (`RetryTemplate`, `@Retryable`, `@ConcurrencyLimit`) plus a small own rate limiter. (c) Own implementation.
-- **Decision (recommended)**: (a).
+- **Decision (accepted)**: (a).
 - **Consequences**: One library covers all three patterns, configured by properties and visible in metrics. Adds a dependency; the Spring Boot 4 module is recent (2.4.0 initially missed the BOM entry), so pin a verified 2.4.x version. Option (b) has no dependency but no rate limiter or circuit breaker.
 
 ### ADR-08: Email delivery through a gateway with SES and SMTP adapters
 
 - **Context**: Section 5 names AWS SES as the example email service; local development needs a mail sink; NFR-19 asks for sender authentication.
 - **Options**: (a) Email channel with a gateway port and two adapters: Amazon SES API (AWS SDK for Java v2, SESv2 API) for the cloud and SMTP (Spring Mail) for local Mailpit. (b) Spring Mail only, using the SES SMTP interface in the cloud. (c) Spring Cloud AWS 4.0 SES starter (SES behind Spring's `MailSender`) plus SMTP locally.
-- **Decision (recommended)**: (a).
-- **Consequences**: Clear error classification from the SES API (throttling vs. permanent rejection) and no SMTP credentials in the cloud (IAM role instead). Two adapters to maintain. Option (b) is the smallest (one adapter) and is a good choice if the user prefers minimal dependencies. SES requires a verified sender domain with SPF, DKIM and DMARC and production access (ARSK-02). Email templates (plain text and simple HTML) are rendered inside the channel.
+- **Decision (accepted)**: (a).
+- **Consequences**: Clear error classification from the SES API (throttling vs. permanent rejection) and no SMTP credentials in the cloud (IAM role instead). Two adapters to maintain. Option (b) would be smaller (one adapter) but was not chosen (AQ-06). SES requires a verified sender domain with SPF, DKIM and DMARC and production access (ARSK-02). Email templates (plain text and simple HTML) are rendered inside the channel.
 
 ### ADR-09: Protection of Slack webhook URLs
 
 - **Context**: Webhook URLs are secrets (NFR-04, RSK-06); duplicates must be detected (FR-05).
 - **Options**: (a) Application-level authenticated encryption (AES-GCM) of the URL in a JPA attribute converter, plus a keyed HMAC fingerprint for uniqueness, keys from the secret store. (b) Rely on database/disk encryption only. (c) Envelope encryption with a cloud KMS.
-- **Decision (recommended)**: (a), with key IDs stored alongside ciphertext so keys can be rotated. (c) can replace the key source later.
+- **Decision (accepted)**: (a), with key IDs stored alongside ciphertext so keys can be rotated. (c) can replace the key source later.
 - **Consequences**: A database dump alone does not reveal the URLs; duplicate check works without decryption. Losing the key makes stored webhooks unusable; for the in-memory demo this is irrelevant. The same fingerprint mechanism is used for email addresses for a uniform uniqueness rule.
 
 ### ADR-10: Extension mechanism with Spring beans and configuration
 
 - **Context**: Sources, subscriber types and channels must be added without changing existing components (NFR-14) and enabled by configuration (FR-33).
 - **Options**: (a) SPI interfaces in a separate module; implementations as Spring beans in plugin modules, auto-configured and switched on or off by `enabled` properties; the core collects all beans of each SPI type. (b) Java `ServiceLoader` plugins. (c) External plugin JARs loaded at runtime.
-- **Decision (recommended)**: (a).
+- **Decision (accepted)**: (a).
 - **Consequences**: Idiomatic Spring, testable, no class-loading complexity. Adding a plugin needs a rebuild of the application (acceptable). Start-up fails fast if two plugins claim the same key.
 
 ### ADR-11: Generic subscriber model
 
 - **Context**: Subscriber abstraction is binding; today email and Slack, more later.
 - **Options**: (a) One SUBSCRIBER table with type, display name, address (encrypted when secret), fingerprint, masked form, status; the `SubscriberType` plugin gives meaning to the fields. (b) JPA inheritance (single table or joined) with EmailSubscriber and SlackSubscriber classes. (c) Separate tables per type.
-- **Decision (recommended)**: (a), with an optional small attributes column (JSON) if a future type needs extra fields.
+- **Decision (accepted)**: (a), with an optional small attributes column (JSON) if a future type needs extra fields.
 - **Consequences**: New subscriber types need no migration; the admin list and delete work across all types uniformly. Less type safety in the database; type-specific rules live in the plugin.
 
 ### ADR-12: UI stack details
 
 - **Context**: Angular 21 is binding; UI best practices; WCAG 2.1 AA for public pages; small admin area.
 - **Options**: Components: (a) Angular Material + CDK, (b) PrimeNG, (c) own components with a utility CSS framework. Forms: Reactive Forms vs Signal Forms (experimental in 21). State: signals in services vs NgRx.
-- **Decision (recommended)**: Angular Material + CDK, typed Reactive Forms, signal-based services, standalone components, zoneless, lazy-loaded admin area.
+- **Decision (accepted)**: Angular Material + CDK, typed Reactive Forms, signal-based services, standalone components, zoneless, lazy-loaded admin area.
 - **Consequences**: Accessible components maintained by the Angular team in lockstep with Angular versions; few dependencies. Material's look is generic; theming is possible but limited.
 
 ### ADR-13: API contract with springdoc-openapi (code-first)
 
 - **Context**: The UI and tests need a clear contract; the team is small.
 - **Options**: (a) Code-first: generate OpenAPI from the Spring MVC controllers with springdoc-openapi 3.x; optionally generate TypeScript types for the UI. (b) Contract-first: write OpenAPI, generate server interfaces and client. (c) No formal contract.
-- **Decision (recommended)**: (a); Swagger UI only in local/demo profiles.
+- **Decision (accepted)**: (a); Swagger UI only in local/demo profiles.
 - **Consequences**: Low effort, contract always matches code. Verify the springdoc 3.x Java baseline against Java 17 before adoption.
 
 ### ADR-14: Deployment target
 
 - **Context**: Cloud ready; SES suggests AWS but the stack itself is cloud-neutral.
 - **Options**: (a) OCI container images; Docker Compose locally; AWS reference target with ECS Fargate, application load balancer, managed PostgreSQL (RDS), Secrets Manager, SES, CDN plus object storage for the UI. (b) Kubernetes (any cloud) with Helm charts. (c) A platform service (for example AWS App Runner or a PaaS).
-- **Decision (recommended)**: (a) as the documented target; only the local Compose deployment is built for the demo.
+- **Decision (accepted)**: (a) as the documented target; only the local Compose deployment is built for the demo.
 - **Consequences**: Stays portable (containers, profiles, environment variables). The cloud target is described but not provisioned; infrastructure as code is a later step.
 
 ### ADR-15: Spring Boot 4 minor line
 
 - **Context**: "Spring Boot 4" is binding. 4.0 OSS support ends 2026-12-31; 4.1 is current (4.1.1) with OSS support until 2027-07-31.
 - **Options**: (a) 4.1.x. (b) 4.0.x.
-- **Decision (recommended)**: (a).
+- **Decision (accepted)**: (a).
 - **Consequences**: Longer free support and current fixes; library versions (ShedLock 7, Resilience4j 2.4, springdoc 3.x, Spring Cloud AWS 4.0) must be checked against 4.1 when pinning.
 
 ### ADR-16: Operational functions through Actuator on the management port
 
 - **Context**: Manual trigger and resend (FR-34) and last-run status (NFR-17) are for the operator, not for admins (Q-07: admin UI is list and delete only).
 - **Options**: (a) Custom Actuator endpoint on a separate management port, not exposed publicly, protected by an operator credential. (b) Admin REST endpoints and UI buttons. (c) Command-line runner / one-off job.
-- **Decision (recommended)**: (a).
+- **Decision (accepted)**: (a).
 - **Consequences**: No scope creep in the admin UI; operators use HTTP tools or monitoring. Needs network rules that keep the management port private.
 
 ## 15. Requirements traceability
@@ -797,7 +806,7 @@ All ADRs have status **Proposed**. The user decides.
 | NFR-07 | M | Isolation per source, notification and channel; 10.3 |
 | NFR-08 | M | ADR-07 |
 | NFR-09 | S | Gap detection, "last success" hint to sources, resume of PENDING notifications, last-run health indicator. Limitation: NewsAPI.org top headlines only return current items, so events that dropped off the source during a long outage cannot be recovered (AQ-05). |
-| NFR-10 | S | Worker pools per channel, ADR-06 scale-out path; limited by email quota (ARSK-02) |
+| NFR-10 | S | Worker pools per channel, ADR-06 scale-out path; limited by email quota (ARSK-02); at most 10 events per run in the demo (AQ-03) |
 | NFR-11 | S | Small paged queries, indexes on search fields, static UI via CDN |
 | NFR-12 | M | Angular Material responsive layout |
 | NFR-13 | S | 11 Accessibility, axe checks |
@@ -817,24 +826,26 @@ None. All Must and Should requirements are covered. Two are covered only partial
 
 ### 16.1 Architecture risks
 
-| ID | Risk | Impact | Mitigation / proposed default |
-|---|---|---|---|
-| ARSK-01 | In-memory H2 lives inside the Core process: data, sessions and locks are lost on restart, and only one Core instance can run. This conflicts with "scalable and fault tolerant" for the demo profile. | Medium | Accept for the demo; persistent PostgreSQL profile for any multi-instance or cloud run; PostgreSQL integration tests keep that path working (ADR-04). |
-| ARSK-02 | Email volume. One email per event and subscriber: 5,000 subscribers × about 30 events = about 150,000 emails per hour, about 42 per second sustained. The SES sandbox allows 200 messages per 24 hours and 1 per second (AWS SES developer guide, "Managing your sending limits"); production quotas must be requested. The free NewsAPI.org plan and a small SES quota cannot meet NFR-10 at full demo scale. | High | For the demo, use few subscribers and Mailpit locally; request SES production access and quota before scaling; rate limiter set to the account's send rate; delivery deadline leaves the rest for the next run and logs it. Product decision on volume in AQ-03. |
-| ARSK-03 | At-least-once delivery. A crash after the external send but before the SENT mark causes one duplicate when the notification is retried. Neither Slack webhooks nor SES offer idempotency keys. | Low | Short leases, mark SENT immediately after the call, accept rare duplicates as a documented limitation of FR-20. |
-| ARSK-04 | Angular 21 is in LTS (critical fixes only) since June 2026; Spring Boot 4.0 OSS support ends 2026-12-31. | Low | Use Spring Boot 4.1.x (ADR-15); decide on Angular 21 vs 22 (AQ-01). |
-| ARSK-05 | Slack sign-up makes a synchronous outbound call during a public request (welcome message). Slow Slack responses slow the form; abuse protection is out of scope (CON-11). | Low | Short timeout, strict URL pattern, clear error message; rate limiting can be added later at the edge. |
-| ARSK-06 | Loss of the webhook encryption key makes all Slack subscriptions unusable. | Medium | Key in the secret store with backup; key ID stored with ciphertext for rotation (ADR-09). |
-| ARSK-07 | NewsAPI.org free plan: 100 requests per day, development use only (RSK-04, CON-09). Retries and manual triggers use the same quota. | Medium | One query per run, capped retries, stub source for testing and demos without quota use. |
+| ID | Risk | Impact | Mitigation                                                                                                                                                                                                                                                        |
+|---|---|---|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ARSK-01 | In-memory H2 lives inside the Core process: data, sessions and locks are lost on restart, and only one Core instance can run. This conflicts with "scalable and fault tolerant" for the demo profile. | Medium | Accept for the demo; persistent PostgreSQL profile for any multi-instance or cloud run; PostgreSQL integration tests keep that path working (ADR-04).                                                                                                            |
+| ARSK-02 | Email volume. One email per event and subscriber: 5,000 subscribers × about 30 events = about 150,000 emails per hour, about 42 per second sustained. The SES sandbox allows 200 messages per 24 hours and 1 per second (AWS SES developer guide, "Managing your sending limits"); production quotas must be requested. The free NewsAPI.org plan and a small SES quota cannot meet NFR-10 at full demo scale. | High | For the demo, cap events per run at 10 (AQ-03), use few subscribers and Mailpit locally; request SES production access and quota before scaling; rate limiter set to the account's send rate; delivery deadline leaves the rest for the next run and logs it. Product decision on volume in AQ-03. |
+| ARSK-03 | At-least-once delivery. A crash after the external send but before the SENT mark causes one duplicate when the notification is retried. Neither Slack webhooks nor SES offer idempotency keys. | Low | Short leases, mark SENT immediately after the call, accept rare duplicates as a documented limitation of FR-20.                                                                                                                                                  |
+| ARSK-04 | Angular 21 is in LTS (critical fixes only) since June 2026; Spring Boot 4.0 OSS support ends 2026-12-31. | Low | Use Spring Boot 4.1.x (ADR-15); use Angular 21 (AQ-01).                                                                                                                                                                                                    |
+| ARSK-05 | Slack sign-up makes a synchronous outbound call during a public request (welcome message). Slow Slack responses slow the form; abuse protection is out of scope (CON-11). | Low | Short timeout, strict URL pattern, clear error message; rate limiting can be added later at the edge.                                                                                                                                                            |
+| ARSK-06 | Loss of the webhook encryption key makes all Slack subscriptions unusable. | Medium | Key in the secret store with backup; key ID stored with ciphertext for rotation (ADR-09).                                                                                                                                                                        |
+| ARSK-07 | NewsAPI.org free plan: 100 requests per day, development use only (RSK-04, CON-09). Retries and manual triggers use the same quota. | Medium | One query per run, capped retries, stub source for testing and demos without quota use.                                                                                                                                                                          |
 
-### 16.2 Open questions for the user
+### 16.2 Resolved questions
 
-| ID | Question | Proposed default |
-|---|---|---|
-| AQ-01 | Angular 21 is binding but is already in LTS; Angular 22 is the active version. Stay on 21 or move to 22? | Stay on Angular 21 as decided for the demo; plan an update to 22 before any longer-lived use (LTS ends 2027-06). |
-| AQ-02 | Which zone ID implements "CET"? ASM-03 says CET including summer time. | A regional zone ID such as `Europe/Budapest` (same rules as all CET/CEST countries), not a fixed UTC+1 offset. |
+The user answered these questions during the review. The answers are decisions and are applied throughout the document.
+
+| ID | Question | Decision                                                                                                                                                                                    |
+|---|---|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| AQ-01 | Angular 21 is binding but is already in LTS; Angular 22 is the active version. Stay on 21 or move to 22? | Stay on Angular 21 as decided for the demo; plan an update to 22 before any longer-lived use (LTS ends 2027-06).                                                                            |
+| AQ-02 | Which zone ID implements "CET"? ASM-03 says CET including summer time. | A regional zone ID such as `Europe/Budapest` (same rules as all CET/CEST countries), not a fixed UTC+1 offset.                                                                              |
 | AQ-03 | Email volume at demo scale exceeds typical SES quotas (ARSK-02). Should the demo cap the number of events per run or email subscribers, or should SES production access with a raised quota be requested? | Cap events per run in source configuration (for example 10) for the demo and use Mailpit locally; request SES production access only if a real email demo with many subscribers is planned. |
-| AQ-04 | Should the demo database be a physically separate container (H2 server mode or PostgreSQL) to show the Database/Core/UI separation, or is the embedded in-memory H2 enough? | Embedded H2 for `local`/`demo`; a Compose variant with PostgreSQL to show separation and multi-instance behaviour (ADR-04). |
-| AQ-05 | NFR-09 asks that missed events are collected after downtime. NewsAPI.org top headlines only return current headlines. Is "collect what the source still returns and resume pending deliveries" acceptable? | Yes; record the gap in the run record and health indicator. |
-| AQ-06 | Email gateway: SES API adapter plus SMTP (ADR-08 option a) or SMTP only via the SES SMTP interface (option b)? | Option (a); option (b) if minimal dependencies are preferred. |
-| AQ-07 | Where will the demo be hosted: only locally (Docker Compose) or on a cloud account? This decides whether the AWS target (ADR-14) is provisioned. | Local Docker Compose for the demo; the cloud target stays documented. |
+| AQ-04 | Should the demo database be a physically separate container (H2 server mode or PostgreSQL) to show the Database/Core/UI separation, or is the embedded in-memory H2 enough? | Embedded H2 for `local`/`demo`; a Compose variant with PostgreSQL to show separation and multi-instance behaviour (ADR-04).                                                                 |
+| AQ-05 | NFR-09 asks that missed events are collected after downtime. NewsAPI.org top headlines only return current headlines. Is "collect what the source still returns and resume pending deliveries" acceptable? | Yes; record the gap in the run record and health indicator.                                                                                                                                 |
+| AQ-06 | Email gateway: SES API adapter plus SMTP (ADR-08 option a) or SMTP only via the SES SMTP interface (option b)? | Go with option a.                                                                                                                                                                           |
+| AQ-07 | Where will the demo be hosted: only locally (Docker Compose) or on a cloud account? This decides whether the AWS target (ADR-14) is provisioned. | Local Docker Compose for the demo; the cloud target stays documented.                                                                                                                       |
