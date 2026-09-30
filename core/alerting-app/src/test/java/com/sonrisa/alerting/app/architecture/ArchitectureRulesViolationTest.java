@@ -4,9 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.sonrisa.alerting.app.AlertingApplication;
 import com.sonrisa.alerting.app.architecture.fixture.AppClassUsingPlugin;
+import com.sonrisa.alerting.app.architecture.fixture.ClientWithoutTimeouts;
 import com.sonrisa.alerting.app.architecture.fixture.ControllerExposingEntity;
 import com.sonrisa.alerting.app.architecture.fixture.ControllerUsingDto;
-import com.sonrisa.alerting.app.architecture.fixture.FixtureEntity;
+import com.sonrisa.alerting.archfixture.FixtureEntity;
 import com.sonrisa.alerting.channel.archfixture.PluginUsingApp;
 import com.sonrisa.alerting.source.archfixture.FakeSource;
 import com.sonrisa.alerting.spi.archfixture.SpiUsingSpringBoot;
@@ -79,5 +80,17 @@ class ArchitectureRulesViolationTest {
         assertThat(result.getFailureReport().getDetails())
                 .anyMatch(line -> line.contains("AppClassUsingPlugin"))
                 .noneMatch(line -> line.contains("AlertingApplication"));
+    }
+
+    @Test
+    void httpClientWithoutTimeoutsFails() {
+        EvaluationResult result = evaluate(ArchitectureRules.HTTP_CLIENTS_ARE_BUILT_WITH_TIMEOUTS,
+                ClientWithoutTimeouts.class);
+
+        assertThat(result.hasViolation()).isTrue();
+        assertThat(result.getFailureReport().getDetails())
+                .anyMatch(line -> line.contains("RestClient.create()"))
+                .anyMatch(line -> line.contains("RestClient.builder()"))
+                .anyMatch(line -> line.contains("HttpClient.newHttpClient()"));
     }
 }

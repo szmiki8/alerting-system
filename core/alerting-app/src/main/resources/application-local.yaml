@@ -1,1 +1,6 @@
 # Developer machine (default profile). Human-readable console logs.
+
+# Swagger UI at /swagger-ui.html (ADR-13).
+springdoc:
+  swagger-ui:
+    enabled: true

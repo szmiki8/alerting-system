@@ -8,8 +8,18 @@ dependencies {
     implementation(libs.spring.boot.starter.actuator)
     implementation(libs.spring.boot.starter.validation)
     implementation(libs.spring.boot.starter.security)
+    implementation(libs.springdoc.openapi.starter.webmvc.ui)
+    implementation(libs.spring.boot.starter.restclient)
+    implementation(libs.resilience4j.spring.boot4)
     runtimeOnly(libs.micrometer.registry.prometheus)
     annotationProcessor(libs.spring.boot.configuration.processor)
+
+    // Persistence (BE-06, ADR-04): JPA with Flyway-owned schema; H2 in-memory by default, PostgreSQL in the postgres profile.
+    implementation(libs.spring.boot.starter.data.jpa)
+    implementation(libs.spring.boot.starter.flyway)
+    runtimeOnly(libs.flyway.database.postgresql)
+    runtimeOnly(libs.h2)
+    runtimeOnly(libs.postgresql)
 
     // Plugins are runtime-only: the application never compiles against a concrete plugin (ADR-01, NFR-14).
     runtimeOnly(project(":source-newsapi"))
@@ -20,8 +30,14 @@ dependencies {
 
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.archunit.junit6)
-    // Only for the architecture test fixtures (an @Entity to check the controller rule); JPA itself arrives with BE-06.
-    testImplementation(libs.jakarta.persistence.api)
+    testImplementation(libs.spring.boot.starter.webmvc.test)
+    testImplementation(libs.spring.security.test)
+    testImplementation(libs.wiremock.standalone)
+    // Persistence tests (BE-06): data JPA slice and Testcontainers PostgreSQL.
+    testImplementation(libs.spring.boot.starter.data.jpa.test)
+    testImplementation(libs.spring.boot.testcontainers)
+    testImplementation(libs.testcontainers.junit.jupiter)
+    testImplementation(libs.testcontainers.postgresql)
 }
 
 tasks.test {

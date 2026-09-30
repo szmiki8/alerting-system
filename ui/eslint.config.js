@@ -5,6 +5,13 @@ const tseslint = require('typescript-eslint');
 const angular = require('angular-eslint');
 const prettier = require('eslint-config-prettier/flat');
 
+function browserStorageRestrictions() {
+  return ['localStorage', 'sessionStorage', 'indexedDB'].map((name) => ({
+    name,
+    message: 'No tokens, session or user data in browser storage (architecture Section 11).',
+  }));
+}
+
 module.exports = defineConfig([
   globalIgnores(['dist/', 'coverage/', '.angular/', 'out-tsc/']),
   {
@@ -35,7 +42,24 @@ module.exports = defineConfig([
       ],
       // Zoneless app driven by signals (ADR-12): every component uses OnPush.
       '@angular-eslint/prefer-on-push-component-change-detection': 'error',
+      // No tokens, session or user data in browser storage (architecture Section 11, FE-07).
+      'no-restricted-globals': ['error', ...browserStorageRestrictions()],
+      'no-restricted-properties': [
+        'error',
+        ...['window', 'globalThis', 'self'].flatMap((object) =>
+          browserStorageRestrictions().map(({ name, message }) => ({
+            object,
+            property: name,
+            message,
+          })),
+        ),
+      ],
     },
+  },
+  {
+    // Tests may read and clear browser storage to prove that the application leaves it empty.
+    files: ['**/*.spec.ts'],
+    rules: { 'no-restricted-globals': 'off', 'no-restricted-properties': 'off' },
   },
   {
     files: ['**/*.html'],

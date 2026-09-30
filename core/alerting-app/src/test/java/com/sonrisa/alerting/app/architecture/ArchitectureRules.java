@@ -5,7 +5,10 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
+import com.tngtech.archunit.base.DescribedPredicate;
+import com.tngtech.archunit.core.domain.JavaCall;
 import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.domain.JavaConstructor;
 import com.tngtech.archunit.core.domain.JavaMethod;
 import com.tngtech.archunit.core.domain.JavaType;
 import com.tngtech.archunit.lang.ArchCondition;
@@ -35,7 +38,11 @@ final class ArchitectureRules {
 
     /** Feature packages of the application (package by feature, Section 6.2). */
     static final String[] APP_FEATURES = {"subscription", "admin", "collection", "delivery", "run", "retention",
-            "audit", "security", "persistence", "config"};
+            "audit", "security", "persistence", "config",
+            // Cross-cutting support packages: API conventions (BE-12), outbound HTTP clients and retries (BE-17).
+            "api", "outbound", "resilience",
+            // BE-11: plugin registries (Section 7); used by several features, so not part of any one of them.
+            "plugin"};
 
     // Empty module packages are allowed: the plugin modules and the SPI get their first classes in later tasks.
 
@@ -73,6 +80,16 @@ final class ArchitectureRules {
             .because("the REST API must not expose internal entities (Section 9.2)")
             .allowEmptyShould(true);
 
+    /**
+     * Outbound HTTP clients are built only through {@code OutboundHttpClients}, which requires timeouts
+     * (BE-17, NFR-08). These factories create clients without the integration's timeouts.
+     */
+    static final ArchRule HTTP_CLIENTS_ARE_BUILT_WITH_TIMEOUTS = noClasses()
+            .that().resideInAPackage(BASE + "..")
+            .should().callCodeUnitWhere(clientFactoryWithoutTimeouts())
+            .because("every outbound HTTP client needs explicit timeouts (NFR-08); use OutboundHttpClients")
+            .allowEmptyShould(true);
+
     private ArchitectureRules() {
     }
 
@@ -82,6 +99,25 @@ final class ArchitectureRules {
             packages[i] = BASE + ".app." + APP_FEATURES[i] + "..";
         }
         return packages;
+    }
+
+    private static DescribedPredicate<JavaCall<?>> clientFactoryWithoutTimeouts() {
+        return new DescribedPredicate<>("an HTTP client factory without timeouts (RestClient.create/builder, "
+                + "new RestTemplate, WebClient.create/builder, java.net.http.HttpClient.newHttpClient/newBuilder)") {
+            @Override
+            public boolean test(JavaCall<?> call) {
+                String name = call.getName();
+                return switch (call.getTargetOwner().getName()) {
+                    case "org.springframework.web.client.RestClient",
+                            "org.springframework.web.reactive.function.client.WebClient" ->
+                            name.equals("create") || name.equals("builder");
+                    case "org.springframework.web.client.RestTemplate" ->
+                            name.equals(JavaConstructor.CONSTRUCTOR_NAME);
+                    case "java.net.http.HttpClient" -> name.equals("newHttpClient") || name.equals("newBuilder");
+                    default -> false;
+                };
+            }
+        };
     }
 
     private static ArchCondition<JavaMethod> notUseJpaEntitiesInSignature() {

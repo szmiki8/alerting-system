@@ -2,3 +2,7 @@
 spring:
   main:
     banner-mode: off
+  # Persistence (BE-06): one fresh in-memory database per Spring test context, so cached contexts do not
+  # share data. Same compatibility settings as the default datasource in application.yaml.
+  datasource:
+    url: jdbc:h2:mem:test-${random.uuid};MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1

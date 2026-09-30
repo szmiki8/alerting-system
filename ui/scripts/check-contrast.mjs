@@ -44,6 +44,7 @@ const pairs = [
   ['on-secondary-container', 'secondary-container', 4.5],
   ['error', 'surface', 4.5],
   ['on-error', 'error', 4.5],
+  ['on-error-container', 'error-container', 4.5],
   ['on-surface', 'surface-container-highest', 4.5],
   ['on-surface-variant', 'surface-container-highest', 4.5],
   ['outline', 'surface', 3],

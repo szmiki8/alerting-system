@@ -16,11 +16,15 @@ import org.springframework.context.ConfigurableApplicationContext;
 class StructuredLoggingTest {
 
     private static String startAndCapture(String profile, CapturedOutput output) {
+        String[] args = {
+            "--spring.profiles.active=" + profile,
+            "--server.port=0", "--management.server.port=0",
+            // The deployed profiles require an operator password (test-only value).
+            "--alerting.management.operator-password=test-only-password"};
+        // ... and the encryption and fingerprint keys (test-only values).
+        args = DeployedProfileArguments.concat(args, DeployedProfileArguments.KEYS);
         ConfigurableApplicationContext context = SpringApplication.run(AlertingApplication.class,
-                "--spring.profiles.active=" + profile,
-                "--server.port=0", "--management.server.port=0",
-                // The deployed profiles require an operator password (test-only value).
-                "--alerting.management.operator-password=test-only-password");
+                DeployedProfileArguments.withDatabase(profile, args));
         context.close();
         return output.getOut();
     }

@@ -88,12 +88,15 @@ class ConfigurationPropertiesTest {
     @Test
     void toStringNeverShowsSecrets() {
         runner.withPropertyValues(
-                        "alerting.security.encryption-key=test-only-encryption-key",
-                        "alerting.security.fingerprint-key=test-only-fingerprint-key",
+                        // Well-formed test-only keys (BE-09 validates the format).
+                        "alerting.security.encryption-key=" + DeployedProfileArguments.TEST_ENCRYPTION_KEY,
+                        "alerting.security.encryption-old-keys=test-only-old:" + DeployedProfileArguments.TEST_FINGERPRINT_KEY,
+                        "alerting.security.fingerprint-key=" + DeployedProfileArguments.TEST_FINGERPRINT_KEY,
                         "alerting.management.operator-password=test-only-password")
                 .run(context -> {
                     assertThat(context.getBean(AlertingSecurityProperties.class).toString())
-                            .doesNotContain("test-only").contains("encryptionKey=<set>");
+                            .doesNotContain("test-only").doesNotContain("AAAAAAAA")
+                            .contains("encryptionKey=<set>", "encryptionOldKeys=1 entries", "fingerprintKey=<set>");
                     assertThat(context.getBean(AlertingManagementProperties.class).toString())
                             .doesNotContain("test-only").contains("operatorPassword=<set>");
                 });

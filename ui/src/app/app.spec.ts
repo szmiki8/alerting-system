@@ -1,10 +1,13 @@
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { API_PATHS } from './api/api-paths';
 import { App } from './app';
 import { appConfig } from './app.config';
 
 describe('App shell', () => {
   let router: Router;
+  let httpTesting: HttpTestingController;
 
   async function render() {
     const fixture = TestBed.createComponent(App);
@@ -15,14 +18,31 @@ describe('App shell', () => {
   }
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ imports: [App], providers: appConfig.providers });
+    localStorage.clear();
+    sessionStorage.clear();
+    TestBed.configureTestingModule({
+      imports: [App],
+      providers: [...appConfig.providers, provideHttpClientTesting()],
+    });
     router = TestBed.inject(Router);
+    httpTesting = TestBed.inject(HttpTestingController);
+    // The start-up CSRF call (FE-07); answered like the Core does.
+    httpTesting.expectOne(API_PATHS.csrf).flush(null, { status: 204, statusText: 'No Content' });
   });
 
-  afterEach(() => document.body.replaceChildren());
+  afterEach(() => {
+    document.body.replaceChildren();
+    httpTesting.verify();
+  });
 
   it('runs without zone.js', () => {
     expect((globalThis as { Zone?: unknown }).Zone).toBeUndefined();
+  });
+
+  it('keeps no token, session or user data in browser storage', async () => {
+    await render();
+    expect(localStorage.length).toBe(0);
+    expect(sessionStorage.length).toBe(0);
   });
 
   it('has header, nav, main and footer landmarks and shows the product name', async () => {

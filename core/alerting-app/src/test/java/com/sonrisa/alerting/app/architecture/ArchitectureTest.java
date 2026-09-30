@@ -29,4 +29,7 @@ class ArchitectureTest {
 
     @ArchTest
     static final ArchRule controllersDoNotExposeEntities = ArchitectureRules.CONTROLLERS_DO_NOT_EXPOSE_ENTITIES;
+
+    @ArchTest
+    static final ArchRule httpClientsAreBuiltWithTimeouts = ArchitectureRules.HTTP_CLIENTS_ARE_BUILT_WITH_TIMEOUTS;
 }

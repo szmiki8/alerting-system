@@ -9,3 +9,7 @@ logging:
 alerting:
   management:
     operator-password-required: true
+  # BE-09: refuse to start without the encryption and fingerprint keys
+  # (ALERTING_SECURITY_ENCRYPTION_KEY, ALERTING_SECURITY_FINGERPRINT_KEY).
+  security:
+    keys-required: true

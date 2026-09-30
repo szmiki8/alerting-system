@@ -1,4 +1,4 @@
-# PostgreSQL variant (BE-06 adds the datasource settings; credentials come from the environment).
+# PostgreSQL variant: the same application and migrations as the in-memory profiles, only the datasource differs.
 logging:
   structured:
     format:
@@ -8,3 +8,14 @@ logging:
 alerting:
   management:
     operator-password-required: true
+  # BE-09: refuse to start without the encryption and fingerprint keys
+  # (ALERTING_SECURITY_ENCRYPTION_KEY, ALERTING_SECURITY_FINGERPRINT_KEY).
+  security:
+    keys-required: true
+
+# Persistence (BE-06): PostgreSQL datasource. Override the URL and user name with SPRING_DATASOURCE_URL and
+# SPRING_DATASOURCE_USERNAME; the password comes only from SPRING_DATASOURCE_PASSWORD or the secret store.
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/alerting
+    username: alerting

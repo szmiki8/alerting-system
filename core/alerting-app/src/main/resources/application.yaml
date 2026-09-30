@@ -11,11 +11,29 @@ spring:
     default: local
   lifecycle:
     timeout-per-shutdown-phase: 30s
+  http:
+    clients:
+      # Safety net for any client built from Spring Boot's RestClient.Builder (BE-17). Integrations set
+      # their own timeouts through OutboundHttpClients from their configuration group.
+      connect-timeout: 5s
+      read-timeout: 10s
 
 server:
   port: 8080
   # Finish in-flight requests on stop so the probes and the load balancer see a clean shutdown.
   shutdown: graceful
+  # Behind the edge (Nginx, load balancer): honour X-Forwarded-Proto/Host/For so that generated URLs,
+  # redirects and cookies use https (BE-13). "native" is Tomcat's RemoteIpValve, which trusts these
+  # headers only from internal proxy addresses (private networks and localhost).
+  forward-headers-strategy: native
+  servlet:
+    session:
+      cookie:
+        # NFR-01: the admin session cookie is Secure, HttpOnly and SameSite=Lax. The CSRF cookie follows
+        # the same secure flag (Chrome and Firefox accept Secure cookies on http://localhost).
+        secure: true
+        http-only: true
+        same-site: lax
 
 # Actuator only on the management port, which Nginx and the load balancer never route (ADR-16).
 management:
@@ -30,7 +48,7 @@ management:
       probes:
         enabled: true           # /actuator/health/liveness and /actuator/health/readiness
       show-details: when-authorized
-      # BE-06 adds the database to the readiness group.
+      # The readiness group includes the database: see the persistence block at the end of this file.
 
 alerting:
   schedule:
@@ -51,3 +69,71 @@ alerting:
     # admin-allow-list: set ALERTING_SECURITY_ADMIN_ALLOW_LIST (comma-separated emails)
   management:
     operator-username: operator
+  resilience:
+    max-retry-after: 60s    # a longer 429 Retry-After ends the retries of that call (BE-17)
+
+# API contract (ADR-13, BE-12): /v3/api-docs documents the /api/** endpoints in every profile;
+# Swagger UI is switched on only in the local and demo profiles.
+springdoc:
+  paths-to-match: /api/**
+  swagger-ui:
+    enabled: false
+
+# Retries for sources and channels (BE-17, ADR-07, NFR-08): exponential backoff with jitter.
+# Waits: about 1x, 2x, 4x wait-duration (+/- 50 %), capped at exponential-max-wait-duration.
+# What is retried (transient: timeouts, 5xx, 429) is decided in code (resilience.Retries), not here.
+# Override per source or channel without code change, e.g.:
+#   resilience4j.retry.instances.newsapi: { base-config: sources, max-attempts: 5 }
+resilience4j:
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration: 1s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        exponential-max-wait-duration: 30s
+        enable-randomized-wait: true
+        randomized-wait-factor: 0.5
+      sources:
+        base-config: default
+        max-attempts: 3
+        wait-duration: 2s
+      channels:
+        base-config: default
+        max-attempts: 4
+        wait-duration: 1s
+
+---
+# Persistence group (BE-06, Section 8.3, ADR-04), in its own YAML document so it stays one block.
+# Default: H2 in-memory inside the Core, in PostgreSQL compatibility mode (profiles local, demo, test).
+# All data is lost on restart, so this setup supports exactly one Core instance. The postgres profile
+# overrides only the datasource (application-postgres.yaml).
+spring:
+  datasource:
+    url: jdbc:h2:mem:alerting;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1
+    username: sa
+  flyway:
+    # Flyway owns the schema. Portable scripts live in common/, database-specific ones in the vendor
+    # folder (h2 or postgresql). Version numbers are unique across all folders.
+    locations: classpath:db/migration/common, classpath:db/migration/{vendor}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate          # Hibernate only checks the schema; it never changes it
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50          # batch inserts (notifications, ADR-06); ids are assigned in the application
+        order_inserts: true
+        order_updates: true
+  session:
+    jdbc:
+      initialize-schema: never    # Spring Session tables come only from Flyway (used from BE-20)
+
+management:
+  endpoint:
+    health:
+      group:
+        readiness:
+          include: readinessState, db   # readiness turns DOWN when the database is unreachable

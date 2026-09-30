@@ -461,4 +461,67 @@ Implement milestone M1: runnable core and UI skeletons
 
 ### Milestone 2
 
-TBD
+**Claude > Start M2 milestone with multiple agents**
+
+"M2 is complete: BE-06 to BE-13, BE-17, FE-06 to FE-08 and FE-10. Both builds pass on the merged code. ./gradlew build runs 249 tests, none skipped or failed. npm run check runs 56 tests. The merged app also works when started. Nothing is committed.
+
+How the parallel work came together:
+- Merging: I brought the three backend worktrees into the main tree.
+    - SPI: applied cleanly.
+    - API/security: one conflict, in the ArchUnit rules.
+    - Persistence: four more conflicts, all blocks added at the same spot, and I kept both sides.
+    - The three worktrees are now removed.
+- Glue code: I added SpiFailureClassifier, with tests, so the BE-17 retries use the transient/permanent types from BE-10.
+- Contract fix: the UI had guessed the CSRF problem type as urn:alerting:problem:csrf. The backend uses urn:alerting:problem:csrf-token-invalid, so I changed the UI to match. The Slack webhook-not-verified type already matched.
+- Mid-run fix: the SPI agent found that the EVENT table in the architecture lacked a human-readable source name, which FR-09 and FR-17 need. I told the persistence agent while it was still working, and it added EVENT.source_name.
+- Housekeeping: .claude/worktrees/ is now in .gitignore. CLAUDE.md now shows M2 as done, lists the new required keys, the database and migrations, and notes that ./gradlew build needs Docker.
+
+What M2 delivers:
+- Persistence: JPA, 5 Flyway migrations that run on both H2 and PostgreSQL, all tables, AES-GCM encryption of webhook URLs, and HMAC fingerprints of addresses. The deployed profiles refuse to start without the keys.
+- Extension points: the three interfaces with their contracts documented. The registries stop start-up on a duplicate key or on a subscriber type whose channel is missing.
+- API foundation: 11 stable Problem Details types, times in the Budapest offset, OpenAPI, and the CSRF endpoint. Unauthenticated admin API calls get a 401.
+- HTTP clients and retries: clients must have timeouts, and retries honour Retry-After.
+- UI: the message catalogue, CET time formatting, the CSRF call at start-up, the error-mapping interceptor, and accessible form feedback components.
+
+Decisions for you. The first one matters before M3:
+
+1. How plugins build HTTP clients (needed for BE-18 in M3): plugins depend only on the extension-interface module, so they can't use the app's timeout-checked client builder. The options:
+    - (a) Plugins get Spring Boot and build clients with timeouts from their own settings.
+    - (b) A small shared support module for plugins.
+    - (c) The app builds the clients and passes them in.
+      I recommend (a). It's the least new structure, and the global timeouts plus the ArchUnit rule still apply.
+2. Retention vs. foreign key: events are kept 30 days, but their notifications 90. The plain foreign key would block the retention job from deleting old events. I recommend ON DELETE SET NULL, decided in BE-42.
+3. Schema deviations to confirm:
+    - source_name and notification.created_at are new columns.
+    - trigger is renamed to run_trigger and at to performed_at, because both are SQL keywords.
+    - Event content is limited to 4,000 characters.
+4. SPI choices:
+    - A subscriber type whose channel is missing stops start-up instead of warning.
+    - Plugins are off unless enabled.
+    - The source exception is checked, so every source must say whether a failure is transient.
+5. API choices:
+    - Problem types are URNs (urn:alerting:problem:*).
+    - Framework error texts are replaced by fixed ones.
+    - HSTS is left to Nginx.
+    - Forwarded headers are trusted only from private networks.
+    - A Retry-After longer than 60 seconds ends the retries.
+6. UI choices:
+    - The start-up CSRF call doesn't block rendering; I'd keep it that way.
+    - A repeated identical message isn't announced again by screen readers.
+    - There's no automatic CSRF retry.
+7. Other notes:
+    - The aws profile has no datasource yet.
+    - Safari rejects Secure cookies on http://localhost, but Chrome and Firefox are fine.
+
+One lesson for future parallel runs: the worktrees share Gradle daemons, so one agent's ./gradlew --stop interrupted another agent's build. Next time I'll tell agents not to stop daemons while others are running."
+
+**Claude > Decisions: 1: a, 2: go with ON DELETE SET NULL, 3: ok, 5: ok, 6: ok, 7: ok, provide more details on 4.**
+
+"Point 4 covers three separate choices from BE-10 and BE-11. Here is each one with its options.
+
+4a. A subscriber type whose channel is missing or disabled: stop start-up (current) or only warn
+
+Every subscriber type names the channel that delivers to it: email goes to the email channel, slack to the Slack channel. The rule catches the case where the type is active but its channel isn't. Examples: a module that brings a subscriber type for another module's channel, or a configuration mistake in
+a future module that has separate flags for its type and channel. It rarely happens with our own modules, because the email and Slack modules switch their type and channel on with one shared flag.
+
+_(output cut...)_"

@@ -1,1 +1,4 @@
 .idea
+
+# Temporary git worktrees of Claude Code agents
+.claude/worktrees/

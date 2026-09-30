@@ -34,15 +34,37 @@ class StartupFailureTest {
     @ValueSource(strings = {"demo", "postgres", "aws"})
     void deployedProfileRefusesToStartWithoutOperatorPassword(String profile, CapturedOutput output) {
         assertThatThrownBy(() -> SpringApplication.run(AlertingApplication.class,
-                "--spring.profiles.active=" + profile,
-                "--server.port=0", "--management.server.port=0",
-                // Plain logs: a failed start does not reset the JSON log format for later tests in this JVM.
-                "--logging.structured.format.console="))
+                DeployedProfileArguments.withDatabase(profile, DeployedProfileArguments.concat(new String[] {
+                        "--spring.profiles.active=" + profile,
+                        "--server.port=0", "--management.server.port=0",
+                        // Plain logs: a failed start does not reset the JSON log format for later tests in this JVM.
+                        "--logging.structured.format.console="},
+                        // Only the password is missing.
+                        DeployedProfileArguments.KEYS))))
                 .isInstanceOf(Exception.class);
 
         assertThat(output.getOut() + output.getErr())
                 .contains("APPLICATION FAILED TO START")
                 .contains("alerting.management")
                 .contains("must be set through ALERTING_MANAGEMENT_OPERATOR_PASSWORD in this profile");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"demo", "postgres", "aws"})
+    void deployedProfileRefusesToStartWithoutKeys(String profile, CapturedOutput output) {
+        assertThatThrownBy(() -> SpringApplication.run(AlertingApplication.class,
+                DeployedProfileArguments.withDatabase(profile,
+                        "--spring.profiles.active=" + profile,
+                        "--server.port=0", "--management.server.port=0",
+                        "--logging.structured.format.console=",
+                        // Only the keys are missing (BE-09).
+                        "--alerting.management.operator-password=test-only-password")))
+                .isInstanceOf(Exception.class);
+
+        assertThat(output.getOut() + output.getErr())
+                .contains("APPLICATION FAILED TO START")
+                .contains("alerting.security")
+                .contains("must be set through ALERTING_SECURITY_ENCRYPTION_KEY and ALERTING_SECURITY_FINGERPRINT_KEY"
+                        + " in this profile");
     }
 }

@@ -1,0 +1,4 @@
+com.sonrisa.alerting.testplugin.TestSourceAutoConfiguration
+com.sonrisa.alerting.testplugin.DuplicateTestSourceAutoConfiguration
+com.sonrisa.alerting.testplugin.TestChannelAutoConfiguration
+com.sonrisa.alerting.testplugin.OrphanSubscriberTypeAutoConfiguration
