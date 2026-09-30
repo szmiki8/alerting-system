@@ -102,7 +102,7 @@ Based on Section 2. "Understanding the vague brief" and my previous experience, 
 - Important events must be stored in a standard format (date and time, title, content, source); they must be collected at regular, configurable intervals and subsequently forwarded to subscribed users.
 - The initial source of information is NewsAPI.org headlines. The list of sources may be expanded in the future to include services such as NewsAPI.org, Alpha Vantage, USGS Earthquake API, X/Twitter API, etc.
 - After authenticating, administrators can list and delete subscribers.
-- New events are collected daily between midnight and 3:00 AM. They are then sent to subscribers once a day. These settings can be modified as desired by the system operator.
+- New events are collected every hour. Right after each collection, every new event is sent to subscribers as a separate message, one by one (there is no digest). The collection interval can be modified by the system operator. The system uses the CET time zone.
 
 Out of scope for now but maybe implemented later in the future:
 
@@ -132,3 +132,53 @@ Output structure (in docs/01-requirements-specification.md):
 - Open questions and a table tracing each brief statement to its requirements
 
 When it finishes, it reports how many requirements, assumptions, open questions and risks it produced, plus the most important conflicts it found."
+
+Claude > Yes, spawn the agent."
+
+"Agent "Write requirements specification" finished · 2m 2s
+
+"The agent has written docs/01-requirements-specification.md (324 lines). It follows all 14 sections of the skill's structure, and a scan found no endpoint paths, schemas or cron syntax. It hasn't been committed.
+
+Contents: 34 functional requirements, 19 non-functional requirements, 10 assumptions, 8 constraints, 11 open questions and 9 risks. It also has a Mermaid context diagram and a table tracing brief statements to requirements. Your Section 3 decisions are kept, and user preferences, unsubscribe, extra
+sources and extra channels are listed as out of scope.
+
+Most important issues it found in the brief:
+1. No unsubscribe conflicts with GDPR and anti-spam rules. The spec keeps your decision. To reduce the risk, it adds a privacy notice at sign-up, a removal contact in every email, and full deletion of personal data when an admin deletes a subscriber.
+2. No email confirmation at sign-up, so anyone can subscribe someone else's address. It proposes no confirmation step for the demo, plus rate limiting or a bot check.
+3. "Alerts" and "breaking news" vs. a once-a-day digest. Users may expect timely alerts, and the brief doesn't say when or in which time zone the digest is sent. The proposed default is 3:00 AM UTC, configurable.
+4. What "important" means. It currently means NewsAPI.org's top headlines, but the country, category and language filters still need choosing. Market movements and disasters from the original quote aren't covered in the first release.
+5. NewsAPI.org plan limits. The agent left this as an open question to check, but we already confirmed it earlier from their pricing page. The free Developer plan is for development only: it can't be used in staging or production, articles are delayed 24 hours, and it allows 100 requests per day. That's
+   fine for the demo; a real deployment needs a paid plan."
+
+Claude > I've updated the Proposed defaults in Section 13. of 01-requirements-specification.md. Based on those, re-run the agent to make the necessary changes. I've reviewed the open questions, they are fine as is.
+
+"I've updated both documents to match your answers. Neither change is committed.
+
+docs/00-project-overview.md
+- In Section 3, the daily midnight–3 AM rule now says: events are collected every hour, each new event is sent as a separate message right after collection, the interval is configurable, and the system uses CET.
+- I didn't touch the rest of the file.
+
+docs/01-requirements-specification.md (now version 0.3)
+- Digest removed: the question text of Q-04, Q-05, Q-09 and Q-10 no longer mentions a digest. Your defaults are unchanged, except that Q-05 now ends with "CET time zone."
+- CET:
+    - New constraint CON-10 makes CET the time zone for the schedule, for messages and for the admin UI.
+    - Notifications show times in CET (FR-17), and the time zone is no longer a configuration setting (NFR-18).
+    - ASM-03 now says CET includes the summer-time switch to CEST. Tell me if you want fixed CET all year instead.
+- Hourly schedule, events one by one: CON-06 and the traceability row for Decision 9 now point to the updated brief, not to "the operator's override".
+- Privacy and spam risk accepted (demo):
+    - Added CON-11, which records that privacy and anti-spam compliance are not goals of this release.
+    - Removed:
+        - FR-06: the privacy notice at sign-up.
+        - FR-07: the bot and rate-limit protection on the sign-up forms.
+        - FR-22: the removal contact in each email.
+        - NFR-06: the GDPR requirement.
+        - RSK-01, RSK-02 and RSK-10: the privacy, spam and message-volume risks.
+    - NFR-19 (email sender authentication) is back to Should.
+    - Admin deletion still removes the subscriber's data (FR-28), because that is part of your delete decision.
+- Outdated events accepted:
+    - Added CON-12, which says events may be outdated in the demo.
+    - Removed RSK-03, the breaking-news gap.
+    - The NewsAPI.org row in Section 11 notes the 24-hour delay is accepted.
+- IDs: removed IDs are not reused, and the change history lists them.
+- New counts: 32 FR, 19 NFR, 12 CON and 6 RSK."
+
