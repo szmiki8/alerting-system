@@ -6,6 +6,8 @@ The aim of the project is to demonstrate a software development methodology base
 
 The prompts given to Claude Code during the process are also recorded in this documentation. Each prompt starts with the string "Claude > ", and the result produced by Claude Code follows it.
 
+This document in sequence guides the reader through the process of implementing the project.
+
 ## Initial requirements
 
 _"We want users to be able to set up alerts so they get notified when
@@ -186,6 +188,9 @@ docs/01-requirements-specification.md (now version 0.3)
 Deliverables for this project are:
 - docs/00-project-documentation.md: detailed information about the project implementation, evolution
 - docs/01-requirements-specification.md: refined requirements specification of the project
+- docs/02-system-architecture.md: architecture document of the project
+- docs/03-implementation-details.md: detailed implementation steps of the project with acceptance criteria
+- implementation files (Core application, UI application, Docker Compose file to run the system locally)
 - .claude: skill definitions used in the project
 
 ## 5. Define system architecture and constraints
@@ -198,7 +203,7 @@ Basic constraints for the system architecture design:
 - It must be scalable and fault-tolerant - cloud ready.
 - Separate components in core, use abstraction to be able to extend the system later
   - for Sources (later other Sources will be added)
-  - for Subscribers and Channels
+  - for Subscribers
   - for Channels (e.g. using AWS SES for email delivery)
 - Use best practices for UI
 - Use in-memory database for demonstration but keep the possibility to use a persistent database in the future
@@ -339,3 +344,4 @@ Both agents are now running in parallel:
 - UI agent: uses the frontend-engineer skill and writes its FE-nn tasks to a separate temporary file there. It names each backend API it depends on in words.
 
 Neither agent will edit any project file. When both have finished, I'll combine the results into docs/03-implementation-details.md and replace the UI's in-words API dependencies with the matching BE-xx IDs."
+
