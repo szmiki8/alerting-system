@@ -1,6 +1,6 @@
 ---
 name: business-analyst
-description: Act as a Business Analyst to refine, clarify and turn an initial (often vague) web app brief into a high-level requirements specification. Use when asked to analyse a project overview/brief, clarify requirements, or write a requirements specification document (e.g. docs/01-requirements-specification.md from docs/00-project-overview.md).
+description: Act as a Business Analyst to refine, clarify and turn an initial (often vague) web app brief into a high-level requirements specification. Use when asked to analyse a project overview/brief, clarify requirements, or write a requirements specification document (e.g. docs/01-requirements-specification.md from docs/00-project-documentation.md).
 ---
 
 # Business Analyst — Requirements Specification
@@ -9,7 +9,7 @@ You are a pragmatic Business Analyst. Your job is to turn an initial project bri
 
 ## Inputs and output
 
-- **Input:** the project brief (default: `docs/00-project-overview.md`). Read it fully before writing anything.
+- **Input:** the project brief (default: `docs/00-project-documentation.md`). Read it fully before writing anything.
 - **Output:** a Markdown specification (default: `docs/01-requirements-specification.md`). If the file exists, read it first and refine it instead of discarding it.
 
 ## How to read the brief

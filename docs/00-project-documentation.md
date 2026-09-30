@@ -21,10 +21,9 @@ _(These are subject to change during the process.)_
 2. Understand vague brief
 3. Fleshing out vague details to form a complete project picture
 4. Define deliverables, set up scope
-5. Define specific tools for implementation
-6. Define working environment and design system architecture
-7. Implement system
-8. Evaluate and test product
+5. Design system architecture and constraints
+6. Implement system
+7. Evaluate and test product
 
 ## 1. Define initial toolset
 
@@ -182,3 +181,76 @@ docs/01-requirements-specification.md (now version 0.3)
 - IDs: removed IDs are not reused, and the change history lists them.
 - New counts: 32 FR, 19 NFR, 12 CON and 6 RSK."
 
+## 4. Define deliverables, set up scope
+
+Deliverables for this project are:
+- docs/00-project-documentation.md: detailed information about the project implementation, evolution
+- docs/01-requirements-specification.md: refined requirements specification of the project
+- .claude: skill definitions used in the project
+
+## 5. Define system architecture and constraints
+
+Since I am most up-to-date with Java, Spring Boot, and Angular technologies, I will choose these for the implementation.
+
+Basic constraints for the system architecture design:
+- It must be a web application.
+- Separate implementation on a high level: Database, Core and UI
+- It must be scalable and fault-tolerant - cloud ready.
+- Separate components in core, use abstraction to be able to extend the system later
+  - for Sources (later other Sources will be added)
+  - for Subscribers and Channels
+  - for Channels (e.g. using AWS SES for email delivery)
+- Use best practices for UI
+- Use in-memory database for demonstration but keep the possibility to use a persistent database in the future
+- Assume the following technologies: Java 17, Spring Boot 4, Angular 21, NPM, Gradle, Git
+
+**Claude > Define a Senior System Architect skill to design the system architecture based on the docs/01-requirements-specification.md and Section 5. Define system architecture and constraints of 00-project-overview.md. Use that skill and spawn and agent to design the system architecture to docs/02-system-architecture.md.**
+
+"The architecture document is ready in docs/02-system-architecture.md (842 lines, version 0.1, Draft). It isn't committed.
+
+Coverage:
+- All 16 sections from the skill are there, with 10 Mermaid diagrams.
+- Every Must and Should requirement is covered. Two are only partly met, because of limits outside the design:
+    - NFR-09 (recovering missed events): NewsAPI.org top headlines only return current items, so events missed during a long outage can't be fetched later.
+    - NFR-10 (delivery volume): email volume at full demo scale is far above typical Amazon SES limits.
+
+Proposed decisions (ADRs), each marked "Proposed" for you to accept:
+- Structure:
+    - One Spring Boot application split into Gradle modules: a plugin-interface module, the app, and one module per source or channel. Not microservices.
+    - The Angular app is a separate static build, served from the same address as the API.
+- Admin login: handled on the server with Spring Security, Google login and the allow-list, using session cookies.
+- Data:
+    - Spring Data JPA with Flyway migrations.
+    - H2 in memory for the demo, PostgreSQL as the switchable persistent option.
+    - One generic subscriber table for all subscriber types.
+- Hourly run: a Spring scheduled job in the CET zone. ShedLock makes sure only one instance runs it.
+- Delivery:
+    - One stored notification per event and subscriber, unique on that pair, processed by bounded worker pools per channel.
+    - Resilience4j handles retries, rate limits and circuit breakers.
+    - Email goes through the Amazon SES API in the cloud and through SMTP to Mailpit (a local test mail server) on your machine.
+- Security: Slack webhook URLs are encrypted in the database and masked in the UI and logs.
+- Extensibility: sources, channels and subscriber types are Spring beans switched on by a flag in configuration.
+- UI: Angular Material, standalone components, signals, lazy-loaded admin area.
+- Other:
+    - The API documentation is generated from the code (springdoc).
+    - Docker Compose runs the system locally; an AWS target is documented but not built.
+    - Spring Boot 4.1.x.
+    - The manual run trigger, resend and run status sit on an internal management port, not in the admin UI.
+
+Version checks:
+- Java 17 works with Spring Boot 4.
+- The agent recommends 4.1 over 4.0, because 4.0's free support ends on 2026-12-31.
+- Angular 21 works, but it has been in long-term support (critical fixes only) since June 2026, and 22 is the current version.
+- Java 17 has no virtual threads, which is why delivery uses bounded thread pools.
+
+Decisions I'd put to you first:
+1. Email volume: 5,000 subscribers × about 30 events is roughly 150,000 emails per hour, while the SES trial allows 200 per day. Proposed: cap the events per run and use Mailpit for the demo.
+2. In-memory H2 vs. "scalable, fault-tolerant": H2 loses all data on restart and allows only one instance. Proposed: H2 for the demo, plus a PostgreSQL setup to show several instances running.
+3. Angular 21 or 22: proposed to stay on 21 as you chose.
+4. Duplicate sends: a crash between sending and recording the send can deliver one message twice. Neither Slack webhooks nor SES can prevent that. Proposed: accept it and document it.
+5. Which time zone ID means "CET": proposed a regional ID such as Europe/Budapest, so summer time applies.
+
+The document lists these and two more under AQ-01 to AQ-07, each with a proposed default.
+
+The agent's version of the document ended with a note that CLAUDE.md still had no tech stack. I had already fixed CLAUDE.md, so I removed that note. Also, the agent couldn't load the new skill through the skill system, because the skill was created during this session. It read the skill file and followed
+it directly instead."

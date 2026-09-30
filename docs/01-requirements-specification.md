@@ -8,7 +8,7 @@
 | Version | 0.3 |
 | Date | 2026-09-30 |
 | Status | Draft |
-| Source document | `docs/00-project-overview.md` (initial requirements and decisions in Section 3) |
+| Source document | `docs/00-project-documentation.md` (initial requirements and decisions in Section 3) |
 | Author | Business Analyst (Claude Code, `business-analyst` skill) |
 
 Change history:

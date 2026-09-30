@@ -1,13 +1,14 @@
 # Alerting System — SDLC demonstration
 
 A project that demonstrates AI assisted software development, starting from a vague
-brief (see `docs/00-project-overview.md`). The documentation of the process
+brief (see `docs/00-project-documentation.md`). The documentation of the process
 matters as much as the final product.
 
 ## Current phase
-Requirements discovery (steps 2–3 of the plan in `docs/00-project-overview.md`).
-No tech stack is chosen and no code exists yet. Don't scaffold code or assume a
-language or framework until the user has decided on one.
+System architecture design (steps 5–6 of the plan in `docs/00-project-documentation.md`).
+The tech stack is chosen (Section 5 of that file: Java 17, Spring Boot 4, Angular 21,
+NPM, Gradle), but no code exists yet. Don't scaffold code until the user has approved
+the architecture.
 
 ## Working agreements
 - The user makes the design decisions. When there are options, lay out the
