@@ -46,7 +46,8 @@ Questions arising from the incomplete requirements:
 - What are the exact ways of delivering messages via Slack?
 - ...
 
-**Claude > Summarize briefly how a message can be delivered to a user via Slack.** 
+```
+Claude > Summarize briefly how a message can be delivered to a user via Slack. 
 
 "There are four main ways to deliver a message to a user through Slack:
 
@@ -55,9 +56,11 @@ Questions arising from the incomplete requirements:
 
 2. Bot token with chat.postMessage
 
-_(output cut...)_"
+..."
+```
 
-**Claude > What sources can be used to gather information besides RSS feeds and web crawlers?**
+```
+Claude > What sources can be used to gather information besides RSS feeds and web crawlers?
 
 "The main sources are these, grouped by the three examples in the brief plus general options:
 
@@ -71,9 +74,11 @@ _(output cut...)_"
 - Crypto exchanges: Binance, Coinbase and Kraken offer public WebSocket feeds.
 - Official data: SEC EDGAR for company filings, and central bank or statistics APIs such as FRED and ECB for rate decisions.
   
-_(output cut...)_"
+..."
+```
 
-**Claude > Starting with NewAPI.org, NewsData.io, is there a way to retrieve news from general importance perspective or user preferences?**
+```
+Claude > Starting with NewAPI.org, NewsData.io, is there a way to retrieve news from general importance perspective or user preferences?
 
 "Yes, both APIs support both. Neither returns a true "importance score", though. General importance is approximated by editorial curation and source prestige, and user preferences are expressed as query filters.
 
@@ -87,7 +92,8 @@ User preferences
 - q: keyword search with boolean syntax: "exact phrase", +must, -exclude, AND/OR/NOT, parentheses, up to 500 characters. One user's alert rule can map directly to one query, for example (earthquake OR tsunami) AND Japan.
 - Other filters:
    - searchIn limits matching to the title"
-_(output cut...)_"
+..."
+```
 
 ## 3. Fleshing out vague details to form a complete project picture
 
@@ -109,7 +115,8 @@ Out of scope for now but maybe implemented later in the future:
 
 - There is no need to manage user preferences, such as news categories. There is no need for an unsubscribe function.
 
-**Claude > Create a Business Analyst skill to refine, clarify and create requirement specification for a web app which has initial specification in docs/00-project-overview.md. Wait for my confirmation after and spawn and agent to use that skill to refine the requirements to docs/01-requirements-specification.md. Don't go to low level details but use high level words like REST etc.** 
+```
+Claude > Create a Business Analyst skill to refine, clarify and create requirement specification for a web app which has initial specification in docs/00-project-overview.md. Wait for my confirmation after and spawn and agent to use that skill to refine the requirements to docs/01-requirements-specification.md. Don't go to low level details but use high level words like REST etc. 
 
 "I've created the Business Analyst skill at .claude/skills/business-analyst/SKILL.md. It isn't used yet; I'm waiting for your go-ahead.
 
@@ -133,7 +140,9 @@ Output structure (in docs/01-requirements-specification.md):
 - Open questions and a table tracing each brief statement to its requirements
 
 When it finishes, it reports how many requirements, assumptions, open questions and risks it produced, plus the most important conflicts it found."
+```
 
+```
 Claude > Yes, spawn the agent."
 
 "Agent "Write requirements specification" finished · 2m 2s
@@ -150,7 +159,9 @@ Most important issues it found in the brief:
 4. What "important" means. It currently means NewsAPI.org's top headlines, but the country, category and language filters still need choosing. Market movements and disasters from the original quote aren't covered in the first release.
 5. NewsAPI.org plan limits. The agent left this as an open question to check, but we already confirmed it earlier from their pricing page. The free Developer plan is for development only: it can't be used in staging or production, articles are delayed 24 hours, and it allows 100 requests per day. That's
    fine for the demo; a real deployment needs a paid plan."
+```
 
+```
 Claude > I've updated the Proposed defaults in Section 13. of 01-requirements-specification.md. Based on those, re-run the agent to make the necessary changes. I've reviewed the open questions, they are fine as is.
 
 "I've updated both documents to match your answers. Neither change is committed.
@@ -182,6 +193,7 @@ docs/01-requirements-specification.md (now version 0.3)
     - The NewsAPI.org row in Section 11 notes the 24-hour delay is accepted.
 - IDs: removed IDs are not reused, and the change history lists them.
 - New counts: 32 FR, 19 NFR, 12 CON and 6 RSK."
+```
 
 ## 4. Define deliverables, set up scope
 
@@ -209,7 +221,8 @@ Basic constraints for the system architecture design:
 - Use in-memory database for demonstration but keep the possibility to use a persistent database in the future
 - Assume the following technologies: Java 17, Spring Boot 4, Angular 21, NPM, Gradle, Git
 
-**Claude > Define a Senior System Architect skill to design the system architecture based on the docs/01-requirements-specification.md and Section 5. Define system architecture and constraints of 00-project-overview.md. Use that skill and spawn and agent to design the system architecture to docs/02-system-architecture.md.**
+```
+Claude > Define a Senior System Architect skill to design the system architecture based on the docs/01-requirements-specification.md and Section 5. Define system architecture and constraints of 00-project-overview.md. Use that skill and spawn and agent to design the system architecture to docs/02-system-architecture.md.
 
 "The architecture document is ready in docs/02-system-architecture.md (842 lines, version 0.1, Draft). It isn't committed.
 
@@ -259,8 +272,10 @@ The document lists these and two more under AQ-01 to AQ-07, each with a proposed
 
 The agent's version of the document ended with a note that CLAUDE.md still had no tech stack. I had already fixed CLAUDE.md, so I removed that note. Also, the agent couldn't load the new skill through the skill system, because the skill was created during this session. It read the skill file and followed
 it directly instead."
+```
 
-**Claude > I've reviewed and slightly modified 02-system-architecture.md Section 16.2. Finalize this.**
+```
+Claude > I've reviewed and slightly modified 02-system-architecture.md Section 16.2. Finalize this.
 
 "The architecture document docs/02-system-architecture.md is now final (version 1.0), with a change-history entry listing what changed. It isn't committed.
 
@@ -282,8 +297,10 @@ Your answers, applied to the rest of the document:
 I edited only text outside the diagrams, so the 10 diagrams are unchanged and still render.
 
 The "Current phase" section of CLAUDE.md still says to wait for architecture approval before writing code. Should I update it to say the architecture is approved and implementation is next?"
+```
 
-**Claude > Architecture is ready. Define two new Senior Software Engineer skills (one for Angular UI, one for Spring Boot Backend development). Fan out two agents with each skill to create implementation details tasks based on the requirements and system architecture. Gather those tasks and orginaze them in docs/03-implementation-details.md. Tasks should be just like JIRA tasks but now recorded only to plain text/md file. I'll approve skills files before agent fan out.** 
+```
+Claude > Architecture is ready. Define two new Senior Software Engineer skills (one for Angular UI, one for Spring Boot Backend development). Fan out two agents with each skill to create implementation details tasks based on the requirements and system architecture. Gather those tasks and orginaze them in docs/03-implementation-details.md. Tasks should be just like JIRA tasks but now recorded only to plain text/md file. I'll approve skills files before agent fan out. 
 
 "I've written the two skills. Please review them before I start the agents.
 
@@ -328,7 +345,9 @@ Merge plan, once you approve:
 3. While merging, I'll replace the UI's in-words API dependencies with the matching BE-xx IDs.
 
 Let me know when they're approved, or what to change."
+```
 
+```
 **Claue > Approved, fan out the agents**
 
 "2 background agents launched (↓ to manage)
@@ -344,12 +363,14 @@ Both agents are now running in parallel:
 - UI agent: uses the frontend-engineer skill and writes its FE-nn tasks to a separate temporary file there. It names each backend API it depends on in words.
 
 Neither agent will edit any project file. When both have finished, I'll combine the results into docs/03-implementation-details.md and replace the UI's in-words API dependencies with the matching BE-xx IDs."
+```
 
 ## 6. Implementation
 
 ### Milestone 1
 
-**Claude > I've reviewed "Section 9. Open points for the user", consider the open points in the requirements specification closed. Start the implementation with M1 milestone with multiple agents with necessary skills.**
+```
+Claude > I've reviewed "Section 9. Open points for the user", consider the open points in the requirements specification closed. Start the implementation with M1 milestone with multiple agents with necessary skills.
 
 "The UI half of M1 is done: FE-01 to FE-05, in ui/. I re-ran npm run check myself. Lint, format check, build, the colour-contrast check and all 12 tests pass. The backend agent is still working on BE-01 to BE-05.
 
@@ -376,7 +397,9 @@ Points for you:
 4. ui/.vscode/mcp.json: the Angular CLI generated this editor config, and it runs an unpinned npx @angular/cli mcp, which would download Angular 22. I'd pin it to @21 or delete it.
 
 I'll report the backend half when its agent finishes."
+```
 
+```
 "M1 is complete: BE-01 to BE-05 are in core/ and FE-01 to FE-05 are in ui/. I re-ran both builds myself. ./gradlew build passes with 51 tests, none skipped or failed. npm run check passes with 12 tests. Nothing is committed, and docs/, CLAUDE.md and .claude/ are unchanged.
 
   Backend, what was built:
@@ -410,8 +433,9 @@ I'll report the backend half when its agent finishes."
   - The build adds -Xmx1g Gradle memory settings in core/gradle.properties because of metaspace warnings.
   - The PostgreSQL Testcontainers check ran instead of being skipped, so Docker works here for BE-06.
   - CLAUDE.md still says no code exists. Should I update its current phase, stack and build commands now?"
-
-**Claude > Decisions on UI related points. 1: self-host Roboto font. 2: ok. 3: Keep the extra checks. 4: Pin to v21. Decisions on backend points. 1: deployed profile cannot run without a password. 2. Optional is fine for now. 3: local profile is fine. 4: Ok. Finally, update CLAUDE.md.**
+```
+```
+Claude > Decisions on UI related points. 1: self-host Roboto font. 2: ok. 3: Keep the extra checks. 4: Pin to v21. Decisions on backend points. 1: deployed profile cannot run without a password. 2. Optional is fine for now. 3: local profile is fine. 4: Ok. Finally, update CLAUDE.md.
 
 "I've applied all your decisions and updated CLAUDE.md. Both builds pass after the changes. Nothing is committed.
 
@@ -442,8 +466,10 @@ CLAUDE.md:
     - Key directories: the main folders in core/ and ui/.
 
 core/.gitignore and ui/.gitignore are already staged in git, so you or your editor must have added them. Everything else in core/ and ui/ is still untracked."
+```
 
-**Claude > Propose a short commit message for M1 milestonre related implementation.**
+```
+Claude > Propose a short commit message for M1 milestonre related implementation.
 
 "Here's a suggested commit message:
 
@@ -458,10 +484,12 @@ Implement milestone M1: runnable core and UI skeletons
   self-hosted Roboto, app shell and routes (FE-01 to FE-05)
 - CLAUDE.md: implementation phase, tech stack, build/run/test
   commands and key directories"
+```
 
 ### Milestone 2
 
-**Claude > Start M2 milestone with multiple agents**
+```
+Claude > Start M2 milestone with multiple agents
 
 "M2 is complete: BE-06 to BE-13, BE-17, FE-06 to FE-08 and FE-10. Both builds pass on the merged code. ./gradlew build runs 249 tests, none skipped or failed. npm run check runs 56 tests. The merged app also works when started. Nothing is committed.
 
@@ -514,8 +542,10 @@ Decisions for you. The first one matters before M3:
     - Safari rejects Secure cookies on http://localhost, but Chrome and Firefox are fine.
 
 One lesson for future parallel runs: the worktrees share Gradle daemons, so one agent's ./gradlew --stop interrupted another agent's build. Next time I'll tell agents not to stop daemons while others are running."
+```
 
-**Claude > Decisions: 1: a, 2: go with ON DELETE SET NULL, 3: ok, 5: ok, 6: ok, 7: ok, provide more details on 4.**
+```
+Claude > Decisions: 1: a, 2: go with ON DELETE SET NULL, 3: ok, 5: ok, 6: ok, 7: ok, provide more details on 4.
 
 "Point 4 covers three separate choices from BE-10 and BE-11. Here is each one with its options.
 
@@ -524,11 +554,13 @@ One lesson for future parallel runs: the worktrees share Gradle daemons, so one 
 Every subscriber type names the channel that delivers to it: email goes to the email channel, slack to the Slack channel. The rule catches the case where the type is active but its channel isn't. Examples: a module that brings a subscriber type for another module's channel, or a configuration mistake in
 a future module that has separate flags for its type and channel. It rarely happens with our own modules, because the email and Slack modules switch their type and channel on with one shared flag.
 
-_(output cut...)_"
+..."
+```
 
 ### Milestone 3
 
-**Claude > Start M3 milestone with multiple agents**
+```
+Claude > Start M3 milestone with multiple agents
 
 "M3 is complete: BE-14, BE-15, BE-16, BE-18, BE-19, FE-09, FE-11, FE-12 and FE-21. Email and Slack sign-up now work end to end. I re-ran everything myself:
 - ./gradlew build: 519 tests, none skipped or failed. Of those, 323 re-ran; Gradle reused the stored results for the modules that didn't change.
@@ -569,7 +601,9 @@ Decisions for you:
     - Two simultaneous sign-ups of the same new webhook can each send a welcome message.
     - The 202 confirmation reads "Thank you. Your subscription has been received."
     - axe accessibility checks come with FE-22, not now."
+```
 
+```
 Claude > Decisions: 1: use 404, it depends on configuration, 2: yes, re-verify, 3: stay permanent, 4: keep it for now, make a note, 5: ok
 
 "I've recorded your decisions and implemented decision 2. The full core build passes with 525 tests, none skipped or failed. Nothing is committed.
@@ -582,4 +616,5 @@ Code change, reactivating inactive subscribers (decision 2):
 - Tests: two new unit tests, plus two integration tests that each run on H2 and on PostgreSQL. They cover a passed and a failed re-verification.
 
 New rows in Section 9.1 of docs/03-implementation-details.md:
-_(output cut...)_"
+..."
+```
