@@ -1,0 +1,11 @@
+# Cloud reference target (Section 12.2). Not provisioned (AQ-07): this profile only holds placeholders.
+# Secrets come from AWS Secrets Manager or the task environment, never from this file.
+logging:
+  structured:
+    format:
+      console: ecs
+
+# Deployed profile: refuse to start without the operator password (ALERTING_MANAGEMENT_OPERATOR_PASSWORD).
+alerting:
+  management:
+    operator-password-required: true

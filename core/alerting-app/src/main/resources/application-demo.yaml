@@ -1,0 +1,10 @@
+# Docker Compose demo stack with the in-memory database (one instance).
+logging:
+  structured:
+    format:
+      console: ecs
+
+# Deployed profile: refuse to start without the operator password (ALERTING_MANAGEMENT_OPERATOR_PASSWORD).
+alerting:
+  management:
+    operator-password-required: true

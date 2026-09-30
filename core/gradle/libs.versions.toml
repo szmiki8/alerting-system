@@ -1,0 +1,54 @@
+# Version catalog for the core build.
+# Spring Boot's BOM (spring-boot-dependencies) manages every version it covers;
+# only libraries outside the BOM get an explicit version here.
+# Verification notes and sources (BE-02): docs/library-versions.md
+
+[versions]
+spring-boot = "4.1.1"
+springdoc = "3.1.1"
+# resilience4j-spring-boot4 is missing from the Resilience4j 2.4.0 BOM, so all Resilience4j modules pin this exact version.
+resilience4j = "2.4.0"
+shedlock = "7.10.1"
+awssdk = "2.55.8"
+archunit = "1.5.1"
+# 3.13.x is the latest stable line (4.0.0 is still beta). Use the shaded standalone jar:
+# wiremock-jetty12 clashes with the Jetty 12.1 version managed by Spring Boot 4.1 (see docs/library-versions.md).
+wiremock = "3.13.2"
+greenmail = "2.1.14"
+
+[libraries]
+spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
+spring-boot-gradle-plugin = { module = "org.springframework.boot:spring-boot-gradle-plugin", version.ref = "spring-boot" }
+
+# Managed by the Spring Boot BOM (no version here)
+spring-boot-starter-webmvc = { module = "org.springframework.boot:spring-boot-starter-webmvc" }
+spring-boot-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation" }
+spring-boot-configuration-processor = { module = "org.springframework.boot:spring-boot-configuration-processor" }
+spring-boot-starter-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator" }
+spring-boot-starter-mail = { module = "org.springframework.boot:spring-boot-starter-mail" }
+spring-boot-starter-security = { module = "org.springframework.boot:spring-boot-starter-security" }
+micrometer-registry-prometheus = { module = "io.micrometer:micrometer-registry-prometheus" }
+spring-boot-starter-jdbc = { module = "org.springframework.boot:spring-boot-starter-jdbc" }
+spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
+h2 = { module = "com.h2database:h2" }
+postgresql = { module = "org.postgresql:postgresql" }
+jakarta-persistence-api = { module = "jakarta.persistence:jakarta.persistence-api" }
+testcontainers-junit-jupiter = { module = "org.testcontainers:testcontainers-junit-jupiter" }
+testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgresql" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+assertj-core = { module = "org.assertj:assertj-core" }
+
+# Not managed by Spring Boot: versions verified in BE-02
+springdoc-openapi-starter-webmvc-ui = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
+resilience4j-spring-boot4 = { module = "io.github.resilience4j:resilience4j-spring-boot4", version.ref = "resilience4j" }
+shedlock-spring = { module = "net.javacrumbs.shedlock:shedlock-spring", version.ref = "shedlock" }
+shedlock-provider-jdbc-template = { module = "net.javacrumbs.shedlock:shedlock-provider-jdbc-template", version.ref = "shedlock" }
+awssdk-bom = { module = "software.amazon.awssdk:bom", version.ref = "awssdk" }
+awssdk-sesv2 = { module = "software.amazon.awssdk:sesv2" }
+archunit-junit6 = { module = "com.tngtech.archunit:archunit-junit6", version.ref = "archunit" }
+wiremock-standalone = { module = "org.wiremock:wiremock-standalone", version.ref = "wiremock" }
+greenmail-junit5 = { module = "com.icegreen:greenmail-junit5", version.ref = "greenmail" }
+
+# The Spring Boot Gradle plugin is applied through the convention plugins in buildSrc
+# (library alias spring-boot-gradle-plugin), so there is no [plugins] entry.

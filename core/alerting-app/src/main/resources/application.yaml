@@ -1,0 +1,53 @@
+# Common configuration for all profiles.
+# Profiles: local (developer machine, default), demo (Docker Compose with H2), postgres (PostgreSQL variant),
+# aws (cloud reference target, placeholders only), test (automated tests, src/test/resources).
+# Secrets never go into these files: set them as environment variables (see core/.env.example) or in the
+# secret store. Spring maps e.g. ALERTING_MANAGEMENT_OPERATOR_PASSWORD to alerting.management.operator-password.
+
+spring:
+  application:
+    name: alerting-core
+  profiles:
+    default: local
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+server:
+  port: 8080
+  # Finish in-flight requests on stop so the probes and the load balancer see a clean shutdown.
+  shutdown: graceful
+
+# Actuator only on the management port, which Nginx and the load balancer never route (ADR-16).
+management:
+  server:
+    port: 8081
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true           # /actuator/health/liveness and /actuator/health/readiness
+      show-details: when-authorized
+      # BE-06 adds the database to the readiness group.
+
+alerting:
+  schedule:
+    collection-cron: "0 0 * * * *"   # top of every hour (FR-31)
+    zone: Europe/Budapest            # CET/CEST (CON-10, ASM-03)
+    retention-cron: "0 30 2 * * *"   # nightly at 02:30
+    lock-at-most-for: 55m
+    lock-at-least-for: 1m
+  delivery:
+    worker-pool-size: 4
+    deadline-margin: 5m
+  retention:
+    events: 30d
+    runs: 90d
+    audit: 365d
+  security:
+    session-timeout: 30m
+    # admin-allow-list: set ALERTING_SECURITY_ADMIN_ALLOW_LIST (comma-separated emails)
+  management:
+    operator-username: operator

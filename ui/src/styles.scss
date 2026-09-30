@@ -1,0 +1,93 @@
+// Global styles and the Angular Material theme (FE-04, ADR-12, NFR-12, NFR-13).
+// This is the single SCSS entry point for colours, typography and density.
+// Theming API: https://material.angular.dev/guide/theming (Material 3 `mat.theme`).
+@use '@angular/material' as mat;
+
+// Roboto is self-hosted from the @fontsource/roboto package (weights 400, 500 and 700 are added in
+// angular.json and bundled with the build), so no font is loaded from a third-party CDN and the strict
+// Content Security Policy at the edge stays intact. System fonts are the fallback.
+$font-family: (Roboto, system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif);
+
+html {
+  height: 100%;
+  // Light scheme only for now; `light dark` would follow the user's system setting.
+  color-scheme: light;
+
+  // Angular Material default azure/blue palette (OP-17). Its light-scheme tones already meet
+  // WCAG 2.1 AA, so no colour override is needed (`npm run check:contrast`):
+  // text 16.4:1, primary on surface 6.2:1, on-primary 6.5:1, error 6.2:1, outline 4.3:1 (min 3:1).
+  // Override single system colours with `$overrides` here if a future tone falls below AA.
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+        theme-type: light,
+      ),
+      typography: (
+        plain-family: $font-family,
+        brand-family: $font-family,
+      ),
+      density: 0,
+    )
+  );
+
+  // Strong focus indicators for all Material components (NFR-13): 3 px primary-coloured outline.
+  @include mat.strong-focus-indicators(
+    (
+      border-color: var(--mat-sys-primary),
+      border-width: 3px,
+      border-style: solid,
+    )
+  );
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-large);
+}
+
+h1 {
+  margin: 0 0 1rem;
+  font: var(--mat-sys-headline-medium);
+}
+
+a {
+  color: var(--mat-sys-primary);
+}
+
+// Visible focus indicator for native interactive elements that are not Material components
+// (links, the skip link, plain buttons and fields). Keyboard focus only.
+:focus-visible {
+  outline: 3px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+// Visually hidden but available to screen readers.
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// Respect the user's reduced-motion setting (NFR-13). Angular Material 21 also reads
+// `prefers-reduced-motion` and reduces its own component animations.
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

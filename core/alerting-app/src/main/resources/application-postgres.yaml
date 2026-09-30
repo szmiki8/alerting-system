@@ -1,0 +1,10 @@
+# PostgreSQL variant (BE-06 adds the datasource settings; credentials come from the environment).
+logging:
+  structured:
+    format:
+      console: ecs
+
+# Deployed profile: refuse to start without the operator password (ALERTING_MANAGEMENT_OPERATOR_PASSWORD).
+alerting:
+  management:
+    operator-password-required: true

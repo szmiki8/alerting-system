@@ -1,0 +1,4 @@
+# Automated tests. Test-only values; never real secrets.
+spring:
+  main:
+    banner-mode: off

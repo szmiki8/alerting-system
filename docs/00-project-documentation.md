@@ -345,3 +345,120 @@ Both agents are now running in parallel:
 
 Neither agent will edit any project file. When both have finished, I'll combine the results into docs/03-implementation-details.md and replace the UI's in-words API dependencies with the matching BE-xx IDs."
 
+## 6. Implementation
+
+### Milestone 1
+
+**Claude > I've reviewed "Section 9. Open points for the user", consider the open points in the requirements specification closed. Start the implementation with M1 milestone with multiple agents with necessary skills.**
+
+"The UI half of M1 is done: FE-01 to FE-05, in ui/. I re-ran npm run check myself. Lint, format check, build, the colour-contrast check and all 12 tests pass. The backend agent is still working on BE-01 to BE-05.
+
+What was built:
+- FE-01, workspace:
+  - Angular 21.2.25 with Material and CDK 21.2.14 and TypeScript 5.9.3, all pinned exactly.
+  - It runs without zone.js, and strict TypeScript and strict templates are on.
+- FE-02, tooling:
+  - ESLint with Angular's accessibility rules, and Prettier.
+  - An npm run check script that runs every check, since there's no CI.
+- FE-03, proxy: the dev server forwards /api, /oauth2, /login and /logout to the Core on localhost:8080. It was tested against a mock Core, including cookies and redirects.
+- FE-04, theme:
+  - Material's default palette. A new check:contrast script measures its colour pairs, and all of them pass WCAG AA, so no colour change was needed.
+  - Strong focus outlines, and the system font stack instead of Google Fonts.
+- FE-05, shell:
+  - Header, navigation, main area and footer, a skip link, and focus moving to the page heading after navigation.
+  - The admin area loads as a separate chunk.
+  - The public sign-up pages are placeholders for now.
+
+Points for you:
+1. Fonts: keep the system fonts, or self-host Roboto. Either works with the strict security policy planned for Nginx.
+2. npm test: it now runs once and exits, and watch mode is npm run test:watch.
+3. Extra checks: the agent added three small things beyond the tasks: the check and check:contrast scripts and a lint rule that requires the faster OnPush change detection. Keep them or drop them?
+4. ui/.vscode/mcp.json: the Angular CLI generated this editor config, and it runs an unpinned npx @angular/cli mcp, which would download Angular 22. I'd pin it to @21 or delete it.
+
+I'll report the backend half when its agent finishes."
+
+"M1 is complete: BE-01 to BE-05 are in core/ and FE-01 to FE-05 are in ui/. I re-ran both builds myself. ./gradlew build passes with 51 tests, none skipped or failed. npm run check passes with 12 tests. Nothing is committed, and docs/, CLAUDE.md and .claude/ are unchanged.
+
+  Backend, what was built:
+  - BE-01, skeleton:
+    - Gradle 9.8 with the Kotlin DSL, a version catalog, and shared build rules.
+    - The 7 modules under com.sonrisa.alerting; the plugin modules are wired into the app as runtime-only dependencies.
+    - The app starts on Java 17 and reports healthy.
+  - BE-02, versions: pinned in core/docs/library-versions.md, each with a source and a smoke test:
+    - Spring Boot 4.1.1, springdoc 3.1.1, Resilience4j 2.4.0, ShedLock 7.10.1.
+    - AWS SDK 2.55.8, ArchUnit 1.5.1, Testcontainers 2.0.5, GreenMail 2.1.14.
+    - The WireMock Jetty clash came up again, so it uses wiremock-standalone 3.13.2, as agreed.
+  - BE-03, module rules: 6 ArchUnit rules, each proven with a deliberately broken example class.
+  - BE-04, configuration:
+    - Validated configuration classes with Europe/Budapest as the default zone.
+    - Profiles local, demo, postgres, aws and test, with JSON logs in the deployed profiles.
+    - A scan that fails if a literal secret appears in the configuration files, and core/.env.example.
+  - BE-05, operations port:
+    - Actuator runs only on port 8081, and port 8080 returns 404 for all Actuator paths.
+    - Health checks are open; info and metrics need the operator's login.
+    - Graceful shutdown with a 30-second timeout.
+
+  Decisions for you:
+  1. Operator password: if none is set, the app starts with a warning and only the health checks answer. The first run instead refused to start without it in demo, postgres and aws. I'd go back to that, so a deployed profile can't run without a password.
+  2. Encryption and fingerprint keys: they stay optional until BE-09 needs them. That's fine for now.
+  3. Default profile: local is the default, so containers must set SPRING_PROFILES_ACTIVE. BE-43 will do that.
+  4. Mail in tests: tests use GreenMail, which runs inside the JVM without Docker. Mailpit stays the mail inbox in Docker Compose.
+  
+  UI points still open from the UI report: fonts, npm test running once, the extra check, check:contrast and lint rule, and the unpinned ui/.vscode/mcp.json.
+
+  Things I noticed:
+  - The build adds -Xmx1g Gradle memory settings in core/gradle.properties because of metaspace warnings.
+  - The PostgreSQL Testcontainers check ran instead of being skipped, so Docker works here for BE-06.
+  - CLAUDE.md still says no code exists. Should I update its current phase, stack and build commands now?"
+
+**Claude > Decisions on UI related points. 1: self-host Roboto font. 2: ok. 3: Keep the extra checks. 4: Pin to v21. Decisions on backend points. 1: deployed profile cannot run without a password. 2. Optional is fine for now. 3: local profile is fine. 4: Ok. Finally, update CLAUDE.md.**
+
+"I've applied all your decisions and updated CLAUDE.md. Both builds pass after the changes. Nothing is committed.
+
+UI changes:
+- Roboto: it's now self-hosted from @fontsource/roboto 5.3.0, pinned, in weights 400, 500 and 700. The theme uses Roboto, with system fonts as the fallback.
+    - The build copies the font files into the output folder, and there are no references to Google's servers.
+    - The build includes 54 font files, but a browser only downloads the ones for the characters it shows, usually the Latin woff2.
+    - The styles file grew by about 3 kB compressed.
+- npm test running once: kept as agreed.
+- Extra checks: kept, as you decided.
+- ui/.vscode/mcp.json: now runs @angular/cli@21.2.24, the same version as the project.
+- Check: npm run check passes, with 12 tests.
+
+Backend change:
+- Operator password:
+    - The demo, postgres and aws profiles now refuse to start without ALERTING_MANAGEMENT_OPERATOR_PASSWORD. The error names the setting but never shows a value.
+    - local and test still allow no password.
+    - core/.env.example explains this.
+- New tests: a start-up test for each deployed profile, plus three binding tests.
+- One side effect I had to fix: a failed start doesn't reset the JSON log format, and that broke the local-profile logging test that runs later in the same test run. The new test now switches JSON logging off for its own start.
+- Check: ./gradlew build passes, with 57 tests, none skipped or failed.
+
+CLAUDE.md:
+- Current phase: implementation, with M1 done and M2 next. The requirements, the architecture and the Section 9 open points count as closed decisions. Tasks are done with the two engineer skills, one at a time, and there are no commits unless you ask.
+- New sections: these replace the "to be filled in later" list:
+    - Tech stack: the pinned versions.
+    - Build / run / test commands: the Gradle and NPM commands, ports, the proxy, and the password rule.
+    - Key directories: the main folders in core/ and ui/.
+
+core/.gitignore and ui/.gitignore are already staged in git, so you or your editor must have added them. Everything else in core/ and ui/ is still untracked."
+
+**Claude > Propose a short commit message for M1 milestonre related implementation.**
+
+"Here's a suggested commit message:
+
+Implement milestone M1: runnable core and UI skeletons
+
+- core: Gradle 9.8 multi-module build (Kotlin DSL, version catalog,
+  Java 17 toolchain), Spring Boot 4.1.1 app, pinned and verified
+  libraries, ArchUnit module rules, validated configuration and
+  profiles, Actuator on management port 8081 (BE-01 to BE-05)
+- ui: Angular 21 workspace (standalone, zoneless, strict), ESLint and
+  Prettier, dev-server proxy to the core, Material theme with
+  self-hosted Roboto, app shell and routes (FE-01 to FE-05)
+- CLAUDE.md: implementation phase, tech stack, build/run/test
+  commands and key directories"
+
+### Milestone 2
+
+TBD

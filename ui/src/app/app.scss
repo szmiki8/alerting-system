@@ -1,0 +1,98 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.container {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 60rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+// Off-screen until focused; then shown at the top left above everything else.
+.skip-link {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 1000;
+  padding: 0.5rem 1rem;
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+  font: var(--mat-sys-label-large);
+  transform: translateY(-200%);
+
+  &:focus {
+    transform: none;
+  }
+}
+
+.app-header {
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+
+  &__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    padding-block: 0.75rem;
+  }
+
+  &__product {
+    font: var(--mat-sys-title-large);
+  }
+}
+
+.app-nav__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app-nav__link {
+  display: inline-block;
+  min-height: 2.75rem; // 44 px touch target
+  box-sizing: border-box;
+  padding: 0.625rem 1rem;
+  border-radius: 1.375rem;
+  color: var(--mat-sys-on-primary);
+  font: var(--mat-sys-label-large);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  // The focus ring must contrast with the primary header background.
+  &:focus-visible {
+    outline-color: var(--mat-sys-on-primary);
+  }
+
+  &--active {
+    background: var(--mat-sys-on-primary);
+    color: var(--mat-sys-primary);
+  }
+}
+
+.app-main {
+  flex: 1;
+  padding-block: 1.5rem 2rem;
+  overflow-wrap: break-word;
+
+  &:focus {
+    outline: none; // Focused programmatically only; the heading inside carries the focus.
+  }
+}
+
+.app-footer {
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+}
